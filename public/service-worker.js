@@ -1,25 +1,35 @@
-const CACHE_NAME = "proctoring-app-cache-v1";
+const CACHE_NAME = 'my-app-cache-v1';
 const urlsToCache = [
-    "/",
-    "/index.html",
-    "/manifest.json",
-    "/icons/icon-192x192.png",
-    "/icons/icon-512x512.png"
+    '/',
+    '/manifest.json',
 ];
 
-self.addEventListener("install", (event) => {
+// Install: cache app shell
+self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log("Opened cache");
             return cache.addAll(urlsToCache);
         })
     );
+    self.skipWaiting();
 });
 
-self.addEventListener("fetch", (event) => {
+// Activate: clean old caches
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((names) =>
+            Promise.all(names.map((name) => {
+                if (name !== CACHE_NAME) return caches.delete(name);
+            }))
+        )
+    );
+    self.clients.claim();
+});
+
+// Fetch: serve cached content when offline
+self.addEventListener('fetch', (event) => {
     event.respondWith(
-        caches.match(event.request).then((response) => {
-            return response || fetch(event.request);
-        })
+        caches.match(event.request)
+            .then((response) => response || fetch(event.request))
     );
 });
