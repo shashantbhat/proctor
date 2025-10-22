@@ -26,12 +26,18 @@ type Pages = {
   "/exam": {
     params: {};
   };
+  "/face-detection": {
+    params: {};
+  };
+  "/sign-up": {
+    params: {};
+  };
 };
 
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/:id" | "/U/:id" | "/exam";
+    page: "/" | "/:id" | "/U/:id" | "/exam" | "/face-detection" | "/sign-up";
   };
   "routes/home/route.tsx": {
     id: "routes/home/route";
@@ -48,5 +54,13 @@ type RouteFiles = {
   "routes/exam/route.tsx": {
     id: "routes/exam/route";
     page: "/exam";
+  };
+  "routes/face-detection/route.tsx": {
+    id: "routes/face-detection/route";
+    page: "/face-detection";
+  };
+  "routes/_auth.sign-up/route.tsx": {
+    id: "routes/_auth.sign-up/route";
+    page: "/sign-up";
   };
 };

@@ -1,5 +1,6 @@
 import GlassSurface from "~/components/GlassSurface";
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 
 const Navbar = () => {
     const [isSupported, setIsSupported] = useState(false);
@@ -42,15 +43,20 @@ const Navbar = () => {
                         <div className="border-l border-gray-300 h-6"></div>
 
                         <div className="flex space-x-2 sm:space-x-6 text-xs sm:text-base font-normal">
-                            <span className="cursor-pointer">Take Test</span>
+                            {/* redirect to teacher-auth  */}
+                            <span className="cursor-pointer">Take Test</span> 
+                            {/* redirect to student-auth */}
                             <span className="cursor-pointer">Upload Test</span>
                         </div>
                     </div>
 
-                    {/* Right: Sign In */}
-                    <button className="bg-white text-black text-xs sm:text-sm px-2 py-1 rounded-[10px] sm:rounded-lg">
-                        Sign In
-                    </button>
+                    {/* redirect to new user sign up */}
+                    <Link
+                        to="/sign-up"
+                        className="bg-white text-black text-xs sm:text-sm px-2 py-1 rounded-[10px] sm:rounded-lg"
+                        >
+                        Sign Up
+                    </Link>
                 </div>
             </GlassSurface>
         </div>
