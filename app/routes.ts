@@ -19,4 +19,12 @@ export default [
         path: "/exam",
         file: "routes/exam/route.tsx", // Exam route
     },
+    {
+        path: "/face-detection",
+        file: "routes/face-detection/route.tsx", // Exam route
+    },
+    {
+        path: "/sign-up",
+        file: "routes/_auth.sign-up/route.tsx", // Exam route
+    },
 ] satisfies RouteConfig;
