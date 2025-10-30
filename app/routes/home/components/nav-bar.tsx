@@ -40,19 +40,17 @@ const Navbar = () => {
                             Proctor
                         </div>
 
-                        <div className="border-l border-gray-300 h-6"></div>
+                        {/* <div className="border-l border-gray-300 h-6"></div> */}
 
                         <div className="flex space-x-2 sm:space-x-6 text-xs sm:text-base font-normal">
                             {/* redirect to teacher-auth  */}
-                            <span className="cursor-pointer">Take Test</span> 
-                            {/* redirect to student-auth */}
-                            <span className="cursor-pointer">Upload Test</span>
+                        
                         </div>
                     </div>
 
                     {/* redirect to new user sign up */}
                     <Link
-                        to="/sign-up"
+                        to="/get-started"
                         className="bg-white text-black text-xs sm:text-sm px-2 py-1 rounded-[10px] sm:rounded-lg"
                         >
                         Sign Up

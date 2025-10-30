@@ -13,12 +13,12 @@ type Pages = {
   "/": {
     params: {};
   };
-  "/:id": {
+  "/student-dash/:id": {
     params: {
       "id": string;
     };
   };
-  "/U/:id": {
+  "/teacher-dash/:id": {
     params: {
       "id": string;
     };
@@ -29,27 +29,37 @@ type Pages = {
   "/face-detection": {
     params: {};
   };
-  "/sign-up": {
+  "/get-started": {
     params: {};
+  };
+  "/teacher-dash/:id/new-test": {
+    params: {
+      "id": string;
+    };
+  };
+  "/test/:test_id": {
+    params: {
+      "test_id": string;
+    };
   };
 };
 
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/:id" | "/U/:id" | "/exam" | "/face-detection" | "/sign-up";
+    page: "/" | "/student-dash/:id" | "/teacher-dash/:id" | "/exam" | "/face-detection" | "/get-started" | "/teacher-dash/:id/new-test" | "/test/:test_id";
   };
   "routes/home/route.tsx": {
     id: "routes/home/route";
     page: "/";
   };
-  "routes/_student-dash.$id/route.tsx": {
-    id: "routes/_student-dash.$id/route";
-    page: "/:id";
+  "routes/student-dash.$id/route.tsx": {
+    id: "routes/student-dash.$id/route";
+    page: "/student-dash/:id";
   };
-  "routes/_teacher-dash.$id/route.tsx": {
-    id: "routes/_teacher-dash.$id/route";
-    page: "/U/:id";
+  "routes/teacher-dash.$id/route.tsx": {
+    id: "routes/teacher-dash.$id/route";
+    page: "/teacher-dash/:id";
   };
   "routes/exam/route.tsx": {
     id: "routes/exam/route";
@@ -59,8 +69,16 @@ type RouteFiles = {
     id: "routes/face-detection/route";
     page: "/face-detection";
   };
-  "routes/_auth.sign-up/route.tsx": {
-    id: "routes/_auth.sign-up/route";
-    page: "/sign-up";
+  "routes/auth/route.tsx": {
+    id: "routes/auth/route";
+    page: "/get-started";
+  };
+  "routes/teacher-dash.$id/new-test.tsx": {
+    id: "routes/teacher-dash.$id/new-test";
+    page: "/teacher-dash/:id/new-test";
+  };
+  "routes/teacher-dash.$id/test.$test_id.tsx": {
+    id: "routes/teacher-dash.$id/test.$test_id";
+    page: "/test/:test_id";
   };
 };

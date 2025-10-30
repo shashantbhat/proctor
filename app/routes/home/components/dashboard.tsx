@@ -6,7 +6,7 @@ const Dashboard = () => {
     return (
         <section className="relative w-screen h-screen sm:min-h-svh overflow-hidden text-white bg-black">
             {/* Hero Content */}
-            <div className="relative w-full h-[600px] mt-16">
+            <div className="relative w-full h-[600px] mt-25">
                 <Orb
                     hoverIntensity={1}
                     rotateOnHover={true}
@@ -14,7 +14,7 @@ const Dashboard = () => {
                     forceHoverState={false}
                 />
             </div>
-            <div className="absolute -top-[15%] sm:top-[27.5%] h-full sm:h-auto w-full flex items-center justify-center z-20 px-4 sm:mt-10 ">
+            <div className="absolute -top-[15%] sm:top-[30%] h-full sm:h-auto w-full flex items-center justify-center z-20 px-4 sm:mt-10 ">
                 <div className="text-center">
                     <h1 className="font-medium text-2xl sm:text-3xl">
                         Secure. Smart. Seamless Exams.
