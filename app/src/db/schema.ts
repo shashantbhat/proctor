@@ -24,6 +24,9 @@ export const tests = pgTable("tests", {
     .references(() => users.id, { onDelete: "cascade" }),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+  durationMinutes: varchar("duration_minutes", { length: 10 }),
+  startTime: timestamp("start_time"),
+  endTime: timestamp("end_time"),
 });
 
 // ---------------------
@@ -60,3 +63,21 @@ export const responses = pgTable("responses", {
   >(),
   submittedAt: timestamp("submitted_at").defaultNow()
 });
+
+export const testParticipants = pgTable("test_participants", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  testId: uuid("test_id")
+    .notNull()
+    .references(() => tests.id, { onDelete: "cascade" }),
+  studentId: uuid("student_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(),
+  enrollmentNo: varchar("enrollment_no", { length: 50 }).notNull(),
+  semester: varchar("semester", { length: 10 }).notNull(),
+  batch: varchar("batch", { length: 50 }).notNull(),
+  branch: varchar("branch", { length: 100 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+

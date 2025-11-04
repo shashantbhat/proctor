@@ -11,10 +11,12 @@ export async function createTest({
   title,
   description,
   teacherId,
+  durationMinutes,
 }: {
   title: string;
   description: string;
   teacherId: string;
+  durationMinutes: string;
 }): Promise<Test[]> {
   const result = await db
     .insert(tests)
@@ -22,6 +24,7 @@ export async function createTest({
       title,
       description,
       teacherId,
+      durationMinutes, // ✅ store test duration
     } satisfies NewTest)
     .returning(); // returns the inserted test row(s)
 

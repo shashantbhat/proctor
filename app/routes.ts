@@ -34,5 +34,17 @@ export default [
     {
         path:"test/:test_id",
         file: "routes/teacher-dash.$id/test.$test_id.tsx"
+    },
+    {
+        path: "start-test/:testId",
+        file: "routes/start-test/start-test.$testID.tsx",
+    },
+    {
+        path: "start-test/:testId/details",
+        file: "routes/start-test/start-test.$testID.details.tsx",
+    },
+    {
+        path: "test/:testId/start",
+        file: "routes/start-test/start-test.$testID.start.tsx",
     }
 ] satisfies RouteConfig;
