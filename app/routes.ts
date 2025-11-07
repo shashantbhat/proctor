@@ -46,5 +46,13 @@ export default [
     {
         path: "test/:testId/start",
         file: "routes/start-test/start-test.$testID.start.tsx",
+    },
+    {
+        path: "/api/record-violations",
+        file: "routes/api/record-violations.tsx",
+    },
+    {
+        path: "/api/submit-test",
+        file: "routes/api/submit-test.tsx",
     }
 ] satisfies RouteConfig;

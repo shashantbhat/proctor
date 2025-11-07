@@ -15,6 +15,20 @@
       "when": 1762189159809,
       "tag": "0001_gigantic_lizard",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1762364694164,
+      "tag": "0002_nappy_mad_thinker",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1762524877593,
+      "tag": "0003_tranquil_bloodstrike",
+      "breakpoints": true
     }
   ]
 }

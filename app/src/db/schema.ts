@@ -1,7 +1,15 @@
-import { pgTable, uuid, varchar, text, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  varchar,
+  text,
+  boolean,
+  timestamp,
+  jsonb,
+} from "drizzle-orm/pg-core";
 
 // ---------------------
-// Users Table (Already exists)
+// Users Table
 // ---------------------
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -38,32 +46,15 @@ export const questions = pgTable("questions", {
     .notNull()
     .references(() => tests.id, { onDelete: "cascade" }),
   questionText: text("question_text").notNull(),
-  options: jsonb("options").$type<string[]>(), // ["Option A", "Option B", "Option C", ...]
-  imageUrls: jsonb("image_urls").$type<string[]>(), // ["url1", "url2"]
+  options: jsonb("options").$type<string[]>(), // ["A", "B", "C", "D"]
+  imageUrls: jsonb("image_urls").$type<string[]>(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 // ---------------------
-// Student Responses Table
+// Test Participants Table
 // ---------------------
-export const responses = pgTable("responses", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  testId: uuid("test_id")
-    .notNull()
-    .references(() => tests.id, { onDelete: "cascade" }),
-  studentId: uuid("student_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  answers: jsonb("answers").$type<
-    {
-      questionId: string;
-      selectedOption: string | null;
-      writtenAnswer?: string;
-    }[]
-  >(),
-  submittedAt: timestamp("submitted_at").defaultNow()
-});
-
+// → Stores which student was part of which test
 export const testParticipants = pgTable("test_participants", {
   id: uuid("id").defaultRandom().primaryKey(),
   testId: uuid("test_id")
@@ -72,12 +63,38 @@ export const testParticipants = pgTable("test_participants", {
   studentId: uuid("student_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+
   name: varchar("name", { length: 100 }).notNull(),
   enrollmentNo: varchar("enrollment_no", { length: 50 }).notNull(),
   semester: varchar("semester", { length: 10 }).notNull(),
   batch: varchar("batch", { length: 50 }).notNull(),
   branch: varchar("branch", { length: 100 }).notNull(),
   email: varchar("email", { length: 255 }).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  joinedAt: timestamp("joined_at").defaultNow(),
 });
 
+// ---------------------
+// Student Responses Table
+// ---------------------
+// → Stores all answers submitted by a student for a specific test
+export const studentResponses = pgTable("student_responses", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  testId: uuid("test_id")
+    .notNull()
+    .references(() => tests.id, { onDelete: "cascade" }),
+  studentId: uuid("student_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+
+  // JSON object containing all answers for that test by this student
+  answers: jsonb("answers").$type<
+    {
+      questionId: string;
+      selectedOption?: string | null;
+      writtenAnswer?: string | null;
+    }[]
+  >(),
+
+  startedAt: timestamp("started_at").defaultNow(),
+  submittedAt: timestamp("submitted_at"),
+});
