@@ -1,5 +1,8 @@
-import { useState } from "react";
+// TestInterface.tsx
+import { useState, useEffect } from "react";
 import { useParams } from "react-router";
+import FaceDetection from "~/routes/face-detection/route";
+import SpeechRecognition from "~/routes/speech-recognition/route";
 
 interface Question {
   id: string;
@@ -8,13 +11,49 @@ interface Question {
   imageUrls?: string[];
 }
 
+interface SuspiciousActivity {
+  timestamp: string;
+  type: string;
+  severity: string;
+  details: string;
+}
 
-export default function TestInterface({ questions, userId }: { questions: Question[], userId: string }) {
+export default function TestInterface({ 
+  questions, 
+  userId 
+}: { 
+  questions: Question[], 
+  userId: string 
+}) {
   const { testId } = useParams();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  // const navigate = useNavigate();
+  const [proctoringActivities, setProctoringActivities] = useState<SuspiciousActivity[]>([]);
+  const [testActive, setTestActive] = useState(false);
+  const [finalTranscript, setFinalTranscript] = useState("");
+
+  // Start the test when component mounts
+  useEffect(() => {
+    setTestActive(true);
+    console.log("Test started - speech recognition activated");
+    
+    // Cleanup on unmount
+    return () => {
+      setTestActive(false);
+    };
+  }, []);
+
+  // Handle face detection activities
+  const handleActivityLogged = (activity: SuspiciousActivity) => {
+    setProctoringActivities(prev => [...prev, activity]);
+  };
+
+  // Handle transcript updates
+  const handleTranscriptUpdate = (transcript: string) => {
+    console.log("Transcript updated:", transcript);
+    setFinalTranscript(transcript);
+  };
 
   const handleAnswerSelect = (qid: string, ans: string) => {
     setAnswers({ ...answers, [qid]: ans });
@@ -32,13 +71,32 @@ export default function TestInterface({ questions, userId }: { questions: Questi
   const finishTest = async () => {
     if (!confirm("Are you sure you want to finish the test?")) return;
     setSubmitting(true);
+    
+    // Stop speech recognition before submitting
+    setTestActive(false);
 
     try {
+      // Get all face detection activities
+      const allActivities = typeof window !== 'undefined' 
+        ? (window as any).getFaceDetectionActivities?.() || proctoringActivities
+        : proctoringActivities;
+
       const payload = {
-        testId, // assuming testId is available from props or useParams
+        testId,
         answers,
         submittedAt: new Date().toISOString(),
-        userId, // ✅ directly use from props
+        userId,
+        // Include proctoring data
+        proctoringData: {
+          suspiciousActivities: allActivities,
+          totalFlags: allActivities.length,
+          highSeverityFlags: allActivities.filter((a: any) => a.severity === "high").length,
+          mediumSeverityFlags: allActivities.filter((a: any) => a.severity === "medium").length,
+          lowSeverityFlags: allActivities.filter((a: any) => a.severity === "low").length,
+          // Include the full transcript
+          speechTranscript: finalTranscript,
+          transcriptLength: finalTranscript.length
+        }
       };
 
       const res = await fetch("/api/submit-test", {
@@ -51,9 +109,13 @@ export default function TestInterface({ questions, userId }: { questions: Questi
 
       if (res.ok) {
         alert("✅ Test submitted successfully!");
-        document.exitFullscreen();
+        
+        // Exit fullscreen if active
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        }
 
-        // ✅ Redirect student to their dashboard
+        // Redirect student to their dashboard
         window.location.href = `/student-dash/${userId}`;
       } else {
         alert("❌ Failed: " + data.message);
@@ -70,6 +132,20 @@ export default function TestInterface({ questions, userId }: { questions: Questi
 
   return (
     <div className="flex h-screen bg-black text-white">
+      {/* Face Detection Component - overlays on UI */}
+      <FaceDetection 
+        testId={testId}
+        userId={userId}
+        onActivityLogged={handleActivityLogged}
+        autoStart={true}
+      />
+
+      {/* Speech Recognition Component */}
+      <SpeechRecognition
+        testActive={testActive}
+        onTranscriptReady={handleTranscriptUpdate}
+      />
+
       {/* Sidebar */}
       <div className="w-1/5 bg-gray-900 p-4 flex flex-col">
         <h2 className="text-lg font-bold mb-4">Questions</h2>
@@ -88,6 +164,14 @@ export default function TestInterface({ questions, userId }: { questions: Questi
             Q{i + 1}
           </button>
         ))}
+        
+        {/* Optional: Show transcript status */}
+        {finalTranscript && (
+          <div className="mt-4 p-2 bg-gray-800 rounded text-xs">
+            <p className="text-gray-400">Speech detected</p>
+            <p className="text-gray-500">{finalTranscript.length} chars</p>
+          </div>
+        )}
       </div>
 
       {/* Main Question Area */}
