@@ -14,8 +14,8 @@ export const loader: LoaderFunction = async ({ request }) => {
   const role = session.get("role");
   const userId = session.get("userId");
 
-  // Redirect based on stored session info
-  if (role === "teacher" && userId) return redirect(`/ dash/${userId}`);
+  // ✅ Fixed redirect path
+  if (role === "teacher" && userId) return redirect(`/teacher-dash/${userId}`);
   if (role === "student" && userId) return redirect(`/student-dash/${userId}`);
   return null;
 };
@@ -26,7 +26,6 @@ export const action: ActionFunction = async ({ request }) => {
   const email = formData.get("email");
   const password = formData.get("password");
 
-  // Validate form inputs
   if (typeof email !== "string" || typeof password !== "string") {
     return json({ error: "Invalid form data" }, { status: 400 });
   }
@@ -35,30 +34,27 @@ export const action: ActionFunction = async ({ request }) => {
     return json({ error: "Email and password are required" }, { status: 400 });
   }
 
-  // Get user by email
   const user = await getUserByEmail(email);
   if (!user) {
     return json({ error: "Invalid email or password" }, { status: 401 });
   }
 
-  // Ensure password hash exists
   if (!user.passwordHash) {
     console.error("Missing passwordHash in user record:", user);
     return json({ error: "Invalid email or password" }, { status: 401 });
   }
 
-  // Compare entered password with stored hash
   const isMatch = await bcrypt.compare(password, user.passwordHash);
   if (!isMatch) {
     return json({ error: "Invalid email or password" }, { status: 401 });
   }
 
-  // Determine redirect path with user UUID
   const redirectTo =
     user.role === "teacher"
       ? `/teacher-dash/${user.id}`
       : `/student-dash/${user.id}`;
 
-  // Create user session and redirect
+  console.log('user id:', user.id);
+  console.log('user role:', user.role);
   return await createUserSession(user.id, user.role, redirectTo);
 };

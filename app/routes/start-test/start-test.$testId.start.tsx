@@ -3,19 +3,32 @@ import { json, type LoaderFunction } from "@remix-run/node";
 import { useLoaderData } from "react-router";
 import TestInterface from "~/components/test-interface";
 import { getQuestionsByTestId } from "~/server/get-questions-with-testID";
+import { sessionStorage } from "~/server/session.server";
 
 const sentences = [
   "this is to check."
 ];
 
-export const loader: LoaderFunction = async ({ params }) => {
+export const loader: LoaderFunction = async ({ request, params }) => {
   const testId = params.testId;
-  if (!testId) throw new Response("Test ID is missing", { status: 400 });
+  const session = await sessionStorage.getSession(request.headers.get("Cookie"));
+  const userId = session.get("userId");
+
+  if (!testId) {
+    throw new Response("Test ID is missing", { status: 400 });
+  }
 
   const data = await getQuestionsByTestId(testId);
-  if (!data.success) throw new Response("Failed to load questions", { status: 500 });
 
-  return json(data.questions);
+  if (!data.success) {
+    throw new Response("Failed to load questions", { status: 500 });
+  }
+
+  // ✅ Return both questions and userId
+  return json({
+    questions: data.questions,
+    userId,
+  });
 };
 
 export default function StartTest() {
@@ -28,7 +41,7 @@ export default function StartTest() {
   const [recognition, setRecognition] = useState<any>(null);
   const [testStarted, setTestStarted] = useState(false);
   const [transcript, setTranscript] = useState("");
-  const questions = useLoaderData<typeof loader>();
+  const { questions, userId } = useLoaderData<typeof loader>();
 
   // Step 1: Ask for camera and mic permission immediately
   useEffect(() => {
@@ -264,7 +277,7 @@ export default function StartTest() {
   if (testStarted)
     
     return (
-      <TestInterface questions={questions} />
+      <TestInterface questions={questions} userId={userId} />
     );
 
   return null;

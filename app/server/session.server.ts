@@ -56,7 +56,7 @@ export async function destroyUserSession(request: Request) {
     status: 302,
     headers: {
       "Set-Cookie": await sessionStorage.destroySession(session),
-      Location: "/sign-in",
+      Location: "/get-started",
     },
   });
 }

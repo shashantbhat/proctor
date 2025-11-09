@@ -9,11 +9,12 @@ interface Question {
 }
 
 
-export default function TestInterface({ questions }: { questions: Question[] }) {
+export default function TestInterface({ questions, userId }: { questions: Question[], userId: string }) {
   const { testId } = useParams();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  // const navigate = useNavigate();
 
   const handleAnswerSelect = (qid: string, ans: string) => {
     setAnswers({ ...answers, [qid]: ans });
@@ -32,27 +33,37 @@ export default function TestInterface({ questions }: { questions: Question[] }) 
     if (!confirm("Are you sure you want to finish the test?")) return;
     setSubmitting(true);
 
-    const payload = {
-      testId, // from useLoaderData or props
-      answers,
-      submittedAt: new Date().toISOString(),
-    };
+    try {
+      const payload = {
+        testId, // assuming testId is available from props or useParams
+        answers,
+        submittedAt: new Date().toISOString(),
+        userId, // ✅ directly use from props
+      };
 
-    const res = await fetch("/api/submit-test", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+      const res = await fetch("/api/submit-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    const data = await res.json();
-    if (res.ok) {
-      alert("✅ Test submitted successfully!");
-      document.exitFullscreen();
-    } else {
-      alert("❌ Failed: " + data.message);
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("✅ Test submitted successfully!");
+        document.exitFullscreen();
+
+        // ✅ Redirect student to their dashboard
+        window.location.href = `/student-dash/${userId}`;
+      } else {
+        alert("❌ Failed: " + data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("❌ Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-
-    setSubmitting(false);
   };
 
   const q = questions[currentIndex];

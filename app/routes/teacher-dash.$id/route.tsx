@@ -1,51 +1,91 @@
-import { Link, useLoaderData, Form, useNavigate, useParams } from "react-router";
-import { json, type LoaderFunction, type ActionFunction } from "@remix-run/node";
+import { Link, useLoaderData, Form, useNavigate } from "react-router";
+import {
+  json,
+  redirect,
+  type LoaderFunction,
+  type ActionFunction,
+} from "@remix-run/node";
 import { db } from "~/src/index";
 import { tests } from "~/src/db/schema";
 import { eq, and } from "drizzle-orm";
 import { closeTest } from "~/server/close-test";
+import { sessionStorage } from "~/server/session.server";
 
+export const loader: LoaderFunction = async ({ request }) => {
+  // ✅ Get session
+  const session = await sessionStorage.getSession(request.headers.get("Cookie"));
+  const userId = session.get("userId");
 
-export const loader: LoaderFunction = async ({ request, params }) => {
-  const teacherId = params.id!;
+  if (!userId) throw new Response("Unauthorized", { status: 401 });
+  // ✅ Build base URL for shareable links
   const url = new URL(request.url);
-  const baseUrl = `${url.protocol}//${url.host}`; // ✅ server-safe
+  const baseUrl = `${url.protocol}//${url.host}`;
 
+  // ✅ Fetch teacher's active tests using session userId
   const activeTests = await db
     .select()
     .from(tests)
-    .where(and(eq(tests.teacherId, teacherId), eq(tests.isActive, true)));
+    .where(and(eq(tests.teacherId, userId), eq(tests.isActive, true)));
 
-  return json({ activeTests, baseUrl });
+  return json({ activeTests, baseUrl, userId });
 };
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
-  const testId = formData.get("testId") as string;
-  await closeTest(testId);
+  const intent = formData.get("intent");
+  const session = await sessionStorage.getSession(request.headers.get("Cookie"));
+
+
+  // ✅ Handle logout
+  if (intent === "logout") {
+    return redirect("/get-started", {
+      headers: {
+        "Set-Cookie": await sessionStorage.destroySession(session),
+      },
+    });
+  }
+
+  // ✅ Handle test close
+  if (intent === "closeTest") {
+    const testId = formData.get("testId") as string;
+    await closeTest(testId);
+  }
+
   return null;
 };
 
 export default function TeacherDashboard() {
-  const { activeTests, baseUrl } = useLoaderData<typeof loader>();
+  const { activeTests, baseUrl, userId } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
-  const { id } = useParams();
 
-  const handleNewTestClick = () => navigate(`/teacher-dash/${id}/new-test`);
+  const handleNewTestClick = () => navigate(`/teacher-dash/${userId}/new-test`);
 
   const handleCopyLink = async (link: string) => {
     try {
       await navigator.clipboard.writeText(link);
       alert("Link copied to clipboard!");
-    } catch (err) {
+    } catch {
       alert("Failed to copy link.");
     }
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Teacher Dashboard</h1>
+    <div className="p-6 max-w-4xl mx-auto relative">
+      {/* Header with logout */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Teacher Dashboard</h1>
+        <Form method="post">
+          <input type="hidden" name="intent" value="logout" />
+          <button
+            type="submit"
+            className="bg-black text-white px-4 py-2 rounded"
+          >
+            Logout
+          </button>
+        </Form>
+      </div>
 
+      {/* Create new test */}
       <div className="mb-6">
         <button
           onClick={handleNewTestClick}
@@ -55,13 +95,14 @@ export default function TeacherDashboard() {
         </button>
       </div>
 
+      {/* Active tests */}
       <h2 className="text-xl font-semibold mb-4">Active Tests</h2>
       {activeTests.length === 0 ? (
         <p>No active tests found.</p>
       ) : (
         <div className="space-y-4">
           {activeTests.map((test) => {
-            const shareableLink = `${baseUrl}/start-test/${test.id}`; // ✅ no window here
+            const shareableLink = `${baseUrl}/start-test/${test.id}`;
             return (
               <div
                 key={test.id}
@@ -95,6 +136,7 @@ export default function TeacherDashboard() {
                   </Link>
 
                   <Form method="post">
+                    <input type="hidden" name="intent" value="closeTest" />
                     <input type="hidden" name="testId" value={test.id} />
                     <button
                       type="submit"

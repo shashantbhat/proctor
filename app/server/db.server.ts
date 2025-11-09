@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db } from "../src/index";  // your drizzle config file
-import { users } from "../src/db/schema";  // your drizzle schema
+import { users, tests } from "../src/db/schema";  // your drizzle schema
 
 // -------------------------------
 // Fetch user by email
@@ -34,3 +34,10 @@ export async function registerUser(
     role
   });
 }
+
+
+export async function getUserById(userId: string) {
+  const result = await db.select().from(users).where(eq(users.id, userId));
+  return result[0]; // return single user
+}
+
