@@ -13,12 +13,12 @@ type Pages = {
   "/": {
     params: {};
   };
-  "/:id": {
+  "/student-dash/:id": {
     params: {
       "id": string;
     };
   };
-  "/U/:id": {
+  "/teacher-dash/:id": {
     params: {
       "id": string;
     };
@@ -29,7 +29,38 @@ type Pages = {
   "/face-detection": {
     params: {};
   };
-  "/sign-up": {
+  "/get-started": {
+    params: {};
+  };
+  "/teacher-dash/:id/new-test": {
+    params: {
+      "id": string;
+    };
+  };
+  "/test/:test_id": {
+    params: {
+      "test_id": string;
+    };
+  };
+  "/start-test/:testId": {
+    params: {
+      "testId": string;
+    };
+  };
+  "/start-test/:testId/details": {
+    params: {
+      "testId": string;
+    };
+  };
+  "/test/:testId/start": {
+    params: {
+      "testId": string;
+    };
+  };
+  "/api/record-violations": {
+    params: {};
+  };
+  "/api/submit-test": {
     params: {};
   };
 };
@@ -37,19 +68,19 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/:id" | "/U/:id" | "/exam" | "/face-detection" | "/sign-up";
+    page: "/" | "/student-dash/:id" | "/teacher-dash/:id" | "/exam" | "/face-detection" | "/get-started" | "/teacher-dash/:id/new-test" | "/test/:test_id" | "/start-test/:testId" | "/start-test/:testId/details" | "/test/:testId/start" | "/api/record-violations" | "/api/submit-test";
   };
   "routes/home/route.tsx": {
     id: "routes/home/route";
     page: "/";
   };
-  "routes/_student-dash.$id/route.tsx": {
-    id: "routes/_student-dash.$id/route";
-    page: "/:id";
+  "routes/student-dash.$id/route.tsx": {
+    id: "routes/student-dash.$id/route";
+    page: "/student-dash/:id";
   };
-  "routes/_teacher-dash.$id/route.tsx": {
-    id: "routes/_teacher-dash.$id/route";
-    page: "/U/:id";
+  "routes/teacher-dash.$id/route.tsx": {
+    id: "routes/teacher-dash.$id/route";
+    page: "/teacher-dash/:id";
   };
   "routes/exam/route.tsx": {
     id: "routes/exam/route";
@@ -59,8 +90,36 @@ type RouteFiles = {
     id: "routes/face-detection/route";
     page: "/face-detection";
   };
-  "routes/_auth.sign-up/route.tsx": {
-    id: "routes/_auth.sign-up/route";
-    page: "/sign-up";
+  "routes/auth/route.tsx": {
+    id: "routes/auth/route";
+    page: "/get-started";
+  };
+  "routes/teacher-dash.$id/new-test.tsx": {
+    id: "routes/teacher-dash.$id/new-test";
+    page: "/teacher-dash/:id/new-test";
+  };
+  "routes/teacher-dash.$id/test.$test_id.tsx": {
+    id: "routes/teacher-dash.$id/test.$test_id";
+    page: "/test/:test_id";
+  };
+  "routes/start-test/start-test.$testID.tsx": {
+    id: "routes/start-test/start-test.$testID";
+    page: "/start-test/:testId";
+  };
+  "routes/start-test/start-test.$testID.details.tsx": {
+    id: "routes/start-test/start-test.$testID.details";
+    page: "/start-test/:testId/details";
+  };
+  "routes/start-test/start-test.$testID.start.tsx": {
+    id: "routes/start-test/start-test.$testID.start";
+    page: "/test/:testId/start";
+  };
+  "routes/api/record-violations.tsx": {
+    id: "routes/api/record-violations";
+    page: "/api/record-violations";
+  };
+  "routes/api/submit-test.tsx": {
+    id: "routes/api/submit-test";
+    page: "/api/submit-test";
   };
 };

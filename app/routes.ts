@@ -8,12 +8,12 @@ export default [
         file: "routes/home/route.tsx", // Home route
     },
     {
-        path: ":id",
-        file: "routes/_student-dash.$id/route.tsx",
+        path: "student-dash/:id",
+        file: "routes/student-dash.$id/route.tsx",
     },
     {
-        path: "/U/:id",
-        file: "routes/_teacher-dash.$id/route.tsx",
+        path: "teacher-dash/:id",
+        file: "routes/teacher-dash.$id/route.tsx",
     },
     {
         path: "/exam",
@@ -24,7 +24,35 @@ export default [
         file: "routes/face-detection/route.tsx", // Exam route
     },
     {
-        path: "/sign-up",
-        file: "routes/_auth.sign-up/route.tsx", // Exam route
+        path: "/get-started",
+        file: "routes/auth/route.tsx", // Exam route
     },
+    {
+        path:"teacher-dash/:id/new-test",
+        file: "routes/teacher-dash.$id/new-test.tsx"
+    },
+    {
+        path:"test/:test_id",
+        file: "routes/teacher-dash.$id/test.$test_id.tsx"
+    },
+    {
+        path: "start-test/:testId",
+        file: "routes/start-test/start-test.$testID.tsx",
+    },
+    {
+        path: "start-test/:testId/details",
+        file: "routes/start-test/start-test.$testID.details.tsx",
+    },
+    {
+        path: "test/:testId/start",
+        file: "routes/start-test/start-test.$testID.start.tsx",
+    },
+    {
+        path: "/api/record-violations",
+        file: "routes/api/record-violations.tsx",
+    },
+    {
+        path: "/api/submit-test",
+        file: "routes/api/submit-test.tsx",
+    }
 ] satisfies RouteConfig;

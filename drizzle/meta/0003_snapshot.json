@@ -1,6 +1,6 @@
 {
-  "id": "9a4f4276-5b7c-4861-8f7a-be643582513d",
-  "prevId": "8d04f41f-362f-40f3-95b9-d2927934a20d",
+  "id": "ae72cf91-3966-4fc6-a3e0-609bda987123",
+  "prevId": "82514f49-5b85-48c0-8dec-b31156764e7f",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -69,8 +69,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.responses": {
-      "name": "responses",
+    "public.student_responses": {
+      "name": "student_responses",
       "schema": "",
       "columns": {
         "id": {
@@ -98,19 +98,25 @@
           "primaryKey": false,
           "notNull": false
         },
-        "submitted_at": {
-          "name": "submitted_at",
+        "started_at": {
+          "name": "started_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
+        },
+        "submitted_at": {
+          "name": "submitted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "responses_test_id_tests_id_fk": {
-          "name": "responses_test_id_tests_id_fk",
-          "tableFrom": "responses",
+        "student_responses_test_id_tests_id_fk": {
+          "name": "student_responses_test_id_tests_id_fk",
+          "tableFrom": "student_responses",
           "tableTo": "tests",
           "columnsFrom": [
             "test_id"
@@ -121,9 +127,9 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "responses_student_id_users_id_fk": {
-          "name": "responses_student_id_users_id_fk",
-          "tableFrom": "responses",
+        "student_responses_student_id_users_id_fk": {
+          "name": "student_responses_student_id_users_id_fk",
+          "tableFrom": "student_responses",
           "tableTo": "users",
           "columnsFrom": [
             "student_id"
@@ -200,8 +206,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "created_at": {
-          "name": "created_at",
+        "joined_at": {
+          "name": "joined_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
