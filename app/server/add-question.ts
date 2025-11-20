@@ -8,12 +8,10 @@ export async function addQuestion({
   testId,
   questionText,
   options,
-  imageUrls,
 }: {
   testId: string;
   questionText: string;
   options: string[];
-  imageUrls?: string[]; // optional field
 }): Promise<NewQuestion[]> {
   const result = await db
     .insert(questions)
@@ -21,7 +19,6 @@ export async function addQuestion({
       testId,
       questionText,
       options,
-      imageUrls,
     })
     .returning();
 

@@ -19,10 +19,9 @@ export const action: ActionFunction = async ({ request, params }) => {
   const form = await request.formData();
   const questionText = form.get("questionText") as string;
   const options = form.getAll("options") as string[];
-  const imageUrls = form.getAll("imageUrls") as string[];
   const testId = params.test_id!;
 
-  await addQuestion({ testId, questionText, options, imageUrls });
+  await addQuestion({ testId, questionText, options });
   return null;
 };
 
@@ -52,10 +51,14 @@ export default function TestDetails() {
           placeholder="Option 2"
           className="border rounded w-full px-3 py-2"
         />
-
         <input
-          name="imageUrls"
-          placeholder="Image URL (optional)"
+          name="options"
+          placeholder="Option 3"
+          className="border rounded w-full px-3 py-2"
+        />
+        <input
+          name="options"
+          placeholder="Option 4"
           className="border rounded w-full px-3 py-2"
         />
 
@@ -81,13 +84,6 @@ export default function TestDetails() {
                   <li key={idx}>{opt}</li>
                 ))}
               </ul>
-              {q.imageUrls.length > 0 && (
-                <img
-                  src={q.imageUrls[0]}
-                  alt="Question Image"
-                  className="w-32 mt-2 rounded"
-                />
-              )}
             </li>
           ))}
         </ul>

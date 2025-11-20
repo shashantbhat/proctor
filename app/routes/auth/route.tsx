@@ -29,11 +29,51 @@ export const action: ActionFunction = async ({ request }) => {
   if (!name || !email || !password)
     return json({ error: "All fields are required." });
 
+  // Server-side validation
+  if (name.trim().length < 2) {
+    return json({ error: "Name must be at least 2 characters long." });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return json({ error: "Please enter a valid email address." });
+  }
+
+  if (password.length < 8) {
+    return json({ error: "Password must be at least 8 characters long." });
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    return json({ error: "Password must contain at least one uppercase letter." });
+  }
+
+  if (!/[a-z]/.test(password)) {
+    return json({ error: "Password must contain at least one lowercase letter." });
+  }
+
+  if (!/[0-9]/.test(password)) {
+    return json({ error: "Password must contain at least one number." });
+  }
+
   try {
     await registerUser(name, email, password, role);
-    return redirect("/sign-in");
-  } catch (err) {
-    console.error(err);
+    return redirect("/get-started");
+    } catch (err: any) {
+    console.error("REG ERROR:", err);
+
+    const pgCode =
+      err?.code ||
+      err?.original?.code ||
+      err?.cause?.code ||
+      err?.parent?.code;
+
+    // Unique constraint violation
+    if (pgCode === "23505") {
+      return json({
+        error: "This email is already registered with us."
+      });
+    }
+
     return json({ error: "Registration failed. Try again." });
   }
 };
@@ -41,10 +81,68 @@ export const action: ActionFunction = async ({ request }) => {
 export default function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [role, setRole] = useState<"student" | "teacher">("student");
+  const [validationErrors, setValidationErrors] = useState<{
+    name?: string;
+    email?: string;
+    password?: string;
+  }>({});
+  
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
 
   const isSubmitting = navigation.state === "submitting";
+
+  const validateName = (name: string) => {
+    if (name.trim().length < 2) {
+      return "Name must be at least 2 characters long";
+    }
+    return "";
+  };
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      return "Email is required";
+    }
+    if (!emailRegex.test(email)) {
+      return "Please enter a valid email address";
+    }
+    return "";
+  };
+
+  const validatePassword = (password: string) => {
+    if (password.length < 8) {
+      return "Password must be at least 8 characters long";
+    }
+    if (!/[A-Z]/.test(password)) {
+      return "Password must contain at least one uppercase letter";
+    }
+    if (!/[a-z]/.test(password)) {
+      return "Password must contain at least one lowercase letter";
+    }
+    if (!/[0-9]/.test(password)) {
+      return "Password must contain at least one number";
+    }
+    return "";
+  };
+
+  const handleBlur = (field: string, value: string) => {
+    if (mode !== "signup") return;
+
+    let error = "";
+    if (field === "name") {
+      error = validateName(value);
+    } else if (field === "email") {
+      error = validateEmail(value);
+    } else if (field === "password") {
+      error = validatePassword(value);
+    }
+
+    setValidationErrors((prev) => ({
+      ...prev,
+      [field]: error,
+    }));
+  };
 
   return (
     <div className="w-screen h-screen relative">
@@ -64,7 +162,10 @@ export default function AuthPage() {
           {/* Mode Toggle */}
           <div className="flex justify-center mb-6 gap-4">
             <button
-              onClick={() => setMode("signin")}
+              onClick={() => {
+                setMode("signin");
+                setValidationErrors({});
+              }}
               className={`px-4 py-2 font-medium rounded-lg transition-all ${
                 mode === "signin"
                   ? "bg-black text-white"
@@ -74,7 +175,10 @@ export default function AuthPage() {
               Sign In
             </button>
             <button
-              onClick={() => setMode("signup")}
+              onClick={() => {
+                setMode("signup");
+                setValidationErrors({});
+              }}
               className={`px-4 py-2 font-medium rounded-lg transition-all ${
                 mode === "signup"
                   ? "bg-black text-white"
@@ -120,7 +224,7 @@ export default function AuthPage() {
             </div>
           )}
 
-          <Form method="post" className="flex flex-col gap-4">
+          <Form method="post" className="flex flex-col gap-4" key={mode}>
             <input type="hidden" name="mode" value={mode} />
             {mode === "signup" && <input type="hidden" name="role" value={role} />}
 
@@ -136,8 +240,14 @@ export default function AuthPage() {
                   id="name"
                   required
                   placeholder="Enter your full name"
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  onBlur={(e) => handleBlur("name", e.target.value)}
+                  className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                    validationErrors.name ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
+                {validationErrors.name && (
+                  <p className="text-red-500 text-xs mt-1">{validationErrors.name}</p>
+                )}
               </div>
             )}
 
@@ -152,8 +262,14 @@ export default function AuthPage() {
                 id="email"
                 required
                 placeholder="Enter your email"
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                onBlur={(e) => mode === "signup" && handleBlur("email", e.target.value)}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                  validationErrors.email ? "border-red-500" : "border-gray-300"
+                }`}
               />
+              {validationErrors.email && (
+                <p className="text-red-500 text-xs mt-1">{validationErrors.email}</p>
+              )}
             </div>
 
             {/* Password field */}
@@ -167,8 +283,19 @@ export default function AuthPage() {
                 id="password"
                 required
                 placeholder="••••••••"
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                onBlur={(e) => mode === "signup" && handleBlur("password", e.target.value)}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                  validationErrors.password ? "border-red-500" : "border-gray-300"
+                }`}
               />
+              {validationErrors.password && (
+                <p className="text-red-500 text-xs mt-1">{validationErrors.password}</p>
+              )}
+              {mode === "signup" && !validationErrors.password && (
+                <p className="text-gray-500 text-xs mt-1">
+                  Must be 8+ characters with uppercase, lowercase, and number
+                </p>
+              )}
             </div>
 
             {/* Submit Button */}
@@ -197,7 +324,10 @@ export default function AuthPage() {
               <>
                 Don't have an account?{" "}
                 <button
-                  onClick={() => setMode("signup")}
+                  onClick={() => {
+                    setMode("signup");
+                    setValidationErrors({});
+                  }}
                   className="text-black hover:underline font-medium"
                 >
                   Create one
@@ -207,7 +337,10 @@ export default function AuthPage() {
               <>
                 Already have an account?{" "}
                 <button
-                  onClick={() => setMode("signin")}
+                  onClick={() => {
+                    setMode("signin");
+                    setValidationErrors({});
+                  }}
                   className="text-black hover:underline font-medium"
                 >
                   Sign in

@@ -6,6 +6,7 @@ import {
   boolean,
   timestamp,
   jsonb,
+  unique
 } from "drizzle-orm/pg-core";
 
 // ---------------------
@@ -47,7 +48,6 @@ export const questions = pgTable("questions", {
     .references(() => tests.id, { onDelete: "cascade" }),
   questionText: text("question_text").notNull(),
   options: jsonb("options").$type<string[]>(), // ["A", "B", "C", "D"]
-  imageUrls: jsonb("image_urls").$type<string[]>(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -55,23 +55,34 @@ export const questions = pgTable("questions", {
 // Test Participants Table
 // ---------------------
 // → Stores which student was part of which test
-export const testParticipants = pgTable("test_participants", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  testId: uuid("test_id")
-    .notNull()
-    .references(() => tests.id, { onDelete: "cascade" }),
-  studentId: uuid("student_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+export const testParticipants = pgTable(
+  "test_participants",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    testId: uuid("test_id")
+      .notNull()
+      .references(() => tests.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
 
-  name: varchar("name", { length: 100 }).notNull(),
-  enrollmentNo: varchar("enrollment_no", { length: 50 }).notNull(),
-  semester: varchar("semester", { length: 10 }).notNull(),
-  batch: varchar("batch", { length: 50 }).notNull(),
-  branch: varchar("branch", { length: 100 }).notNull(),
-  email: varchar("email", { length: 255 }).notNull(),
-  joinedAt: timestamp("joined_at").defaultNow(),
-});
+    name: varchar("name", { length: 100 }).notNull(),
+    enrollmentNo: varchar("enrollment_no", { length: 50 }).notNull(),
+    semester: varchar("semester", { length: 10 }).notNull(),
+    batch: varchar("batch", { length: 50 }).notNull(),
+    branch: varchar("branch", { length: 100 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    joinedAt: timestamp("joined_at").defaultNow(),
+  },
+
+  // ⭐ Add THIS block below
+  (table) => ({
+    oneAttemptPerStudent: unique("one_attempt_per_student").on(
+      table.testId,
+      table.studentId
+    ),
+  })
+);
 
 // ---------------------
 // Student Responses Table

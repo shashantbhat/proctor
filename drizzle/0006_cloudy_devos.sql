@@ -1,0 +1,1 @@
+ALTER TABLE "student_responses" ADD COLUMN "violations" jsonb DEFAULT '[]'::jsonb NOT NULL;
