@@ -484,6 +484,9 @@ export default function FaceDetection({
     setGazeDirection('no face');
     setGazeMetrics({ yaw: 0, pitch: 0, roll: 0, confidence: 0 });
     
+    // see here is the no face detected coming from
+
+    //here i also need to add the activity logging if left/right/up/down for more than an amount of time.
     if (violations.noFace >= THRESHOLDS.consecutive) {
       if (now - lastAlertTimeRef.current > THRESHOLDS.alertCooldown) {
         logActivity("face_not_detected", "high", "Face left camera view");

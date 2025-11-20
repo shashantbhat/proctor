@@ -7,6 +7,7 @@ export const action = async ({ request }: { request: Request }) => {
     const session = await sessionStorage.getSession(
       request.headers.get("Cookie")
     );
+
     const studentId = session.get("userId");
 
     if (!studentId) {
@@ -29,7 +30,7 @@ export const action = async ({ request }: { request: Request }) => {
     await db.insert(studentResponses).values({
       testId,
       studentId,
-      answers,
+      answers, // already a JSON array in correct format
       submittedAt: new Date(submittedAt),
     });
 

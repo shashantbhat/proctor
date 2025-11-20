@@ -261,43 +261,105 @@ export default function TestInterface({
   };
 
   // ---------- Finish Test ----------
+  // const finishTest = async (auto = false) => {
+  //   if (submitting || hasSubmitted) return;
+
+  //   if (!auto) {
+  //     const ok = confirm("Are you sure you want to submit?");
+  //     if (!ok) return;
+  //   }
+
+  //   isEndingTestRef.current = true;
+  //   setSubmitting(true);
+  //   setHasSubmitted(true);
+  //   setTestActive(false);
+
+  //   const payload = {
+  //     testId,
+  //     studentId: userId,
+  //     answers,
+  //     submittedAt: new Date().toISOString(),
+  //     proctoringLog: proctoringActivities,
+  //     violationCount: proctoringActivities.length,
+  //   };
+
+  //   console.log("📤 Submitting", payload);
+
+  //   try {
+  //     await new Promise(res => setTimeout(res, 2000));
+
+  //     if (document.fullscreenElement) await document.exitFullscreen();
+
+  //     alert(auto ? "⏰ Time's up! Auto-submitted." : "✅ Submitted!");
+  //   } catch (err) {
+  //     alert("❌ Error submitting");
+  //     setHasSubmitted(false);
+  //     setSubmitting(false);
+  //     isEndingTestRef.current = false;
+  //   }
+  // };
+
   const finishTest = async (auto = false) => {
-    if (submitting || hasSubmitted) return;
+  if (submitting || hasSubmitted) return;
 
-    if (!auto) {
-      const ok = confirm("Are you sure you want to submit?");
-      if (!ok) return;
-    }
+  if (!auto) {
+    const ok = confirm("Are you sure you want to submit?");
+    if (!ok) return;
+  }
 
-    isEndingTestRef.current = true;
-    setSubmitting(true);
-    setHasSubmitted(true);
-    setTestActive(false);
+  isEndingTestRef.current = true;
+  setSubmitting(true);
+  setHasSubmitted(true);
+  setTestActive(false);
 
-    const payload = {
-      testId,
-      studentId: userId,
-      answers,
-      submittedAt: new Date().toISOString(),
-      proctoringLog: proctoringActivities,
-      violationCount: proctoringActivities.length,
-    };
-
-    console.log("📤 Submitting", payload);
-
-    try {
-      await new Promise(res => setTimeout(res, 2000));
-
-      if (document.fullscreenElement) await document.exitFullscreen();
-
-      alert(auto ? "⏰ Time's up! Auto-submitted." : "✅ Submitted!");
-    } catch (err) {
-      alert("❌ Error submitting");
-      setHasSubmitted(false);
-      setSubmitting(false);
-      isEndingTestRef.current = false;
-    }
+  const payload = {
+    testId,
+    studentId: userId,
+    answers: Object.entries(answers).map(([questionId, selectedOption]) => ({
+      questionId,
+      selectedOption,
+      writtenAnswer: null,
+    })),
+    submittedAt: new Date().toISOString(),
+    proctoringLog: proctoringActivities,
+    violationCount: proctoringActivities.length,
   };
+
+  console.log("📤 Submitting", payload);
+
+  try {
+  const res = await fetch("/api/submit-test", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || "Failed to submit test");
+  }
+
+  if (document.fullscreenElement) await document.exitFullscreen();
+
+  setSubmitting(false);
+
+  setTimeout(() => {
+    alert(auto ? "⏰ Time's up! Auto-submitted." : "✅ Submitted!");
+    window.location.href = `/student-dash/${userId}`;
+  }, 200);
+
+  // 🔥 Redirect to dashboard
+  window.location.href = `/student-dash/${userId}`;
+
+} catch (err) {
+  console.error(err);
+  setHasSubmitted(false);
+  setSubmitting(false);
+  isEndingTestRef.current = false;
+  alert("❌ Error submitting test");
+}
+};
 
   // ---------- Navigation ----------
   const handleAnswerSelect = (qid: string, opt: string) => {
