@@ -45,7 +45,7 @@ export default [
     },
     {
         path: "test/:testId/start",
-        file: "routes/start-test/start-test.$testID.start.tsx",
+        file: "routes/start-test/start-test.$testId.start.tsx",
     },
     {
         path: "/api/record-violations",
