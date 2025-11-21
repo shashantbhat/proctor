@@ -2,10 +2,10 @@
 
 import type { GetInfo, GetAnnotations } from "react-router/internal";
 
-type Module = typeof import("../start-test.$testId.details.js")
+type Module = typeof import("../start-test.$test_id.start.js")
 
 type Info = GetInfo<{
-  file: "routes/start-test/start-test.$testId.details.tsx",
+  file: "routes/start-test/start-test.$test_id.start.tsx",
   module: Module
 }>
 
@@ -13,8 +13,8 @@ type Matches = [{
   id: "root";
   module: typeof import("../../../root.js");
 }, {
-  id: "routes/start-test/start-test.$testId.details";
-  module: typeof import("../start-test.$testId.details.js");
+  id: "routes/start-test/start-test.$test_id.start";
+  module: typeof import("../start-test.$test_id.start.js");
 }];
 
 type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }, false>;

@@ -102,16 +102,16 @@ type RouteFiles = {
     id: "routes/teacher-dash.$id/test.$test_id";
     page: "/test/:test_id";
   };
-  "routes/start-test/start-test.$testId.tsx": {
-    id: "routes/start-test/start-test.$testId";
+  "routes/start-test/start-test.$test_id.tsx": {
+    id: "routes/start-test/start-test.$test_id";
     page: "/start-test/:testId";
   };
-  "routes/start-test/start-test.$testId.details.tsx": {
-    id: "routes/start-test/start-test.$testId.details";
+  "routes/start-test/start-test.$test_id.details.tsx": {
+    id: "routes/start-test/start-test.$test_id.details";
     page: "/start-test/:testId/details";
   };
-  "routes/start-test/start-test.$testId.start.tsx": {
-    id: "routes/start-test/start-test.$testId.start";
+  "routes/start-test/start-test.$test_id.start.tsx": {
+    id: "routes/start-test/start-test.$test_id.start";
     page: "/test/:testId/start";
   };
   "routes/api/record-violations.tsx": {
