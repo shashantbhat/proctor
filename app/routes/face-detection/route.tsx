@@ -363,6 +363,7 @@ export default function FaceDetection({
         violationLoggedRef.current.lookingDown = true;
       }
       
+      // resetViolations(['lookingDown']);
       currentDirection = 'down';
       
       if (violations.lookingDown >= THRESHOLDS.consecutive) {
@@ -385,6 +386,7 @@ export default function FaceDetection({
         violationLoggedRef.current.lookingUp = true;
       }
       
+      // resetViolations(['lookingUp']);
       currentDirection = 'up';
       
       if (violations.lookingUp >= THRESHOLDS.consecutive) {
@@ -407,6 +409,7 @@ export default function FaceDetection({
         violationLoggedRef.current.lookingLeft = true;
       }
       
+      // resetViolations(['lookingLeft']);
       currentDirection = 'left';
       
       if (violations.lookingLeft >= THRESHOLDS.consecutive) {
@@ -429,6 +432,7 @@ export default function FaceDetection({
         violationLoggedRef.current.lookingRight = true;
       }
       
+      // resetViolations(['lookingRight']);
       currentDirection = 'right';
       
       if (violations.lookingRight >= THRESHOLDS.consecutive) {
@@ -438,7 +442,6 @@ export default function FaceDetection({
         activityDetails = `Looking right (yaw: ${yaw.toFixed(1)}°)`;
       }
     } else {
-      // User is looking center - reset all direction violations
       resetViolations([]);
       currentDirection = 'center';
     }
@@ -654,7 +657,7 @@ export default function FaceDetection({
         </div>
       )}
 
-      <div className="fixed bottom-4 right-4 w-[420px] z-40">
+      <div className="hidden fixed bottom-4 right-4 w-[420px] z-40">
         <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl overflow-hidden shadow-2xl border-2 border-gray-700">
           <video
             ref={videoRef}
@@ -720,7 +723,7 @@ export default function FaceDetection({
             </div>
           )}
         </div>
-      </div>``
+      </div>
     </>
   );
 }

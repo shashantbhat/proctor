@@ -401,12 +401,12 @@ export default function TestInterface({
       </div>
 
       {/* Proctoring */}
-      {/* <FaceDetection
+      <FaceDetection
         testId={testId}
         userId={userId}
         onActivityLogged={handleFaceActivity}
         autoStart={true}
-      /> */}
+      />
 
       <SpeechRecognition
         testActive={testActive}
