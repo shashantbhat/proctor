@@ -45,33 +45,41 @@ export default function TestInterface({
   durationMinutes: string;
   startTime?: string;
 }) {
-
   // ---------- State ----------
   const { testId } = useParams();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-
   const [proctoringActivities, setProctoringActivities] = useState<SuspiciousActivity[]>([]);
   const [finalTranscript, setFinalTranscript] = useState("");
-
   const [testActive, setTestActive] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
-
   const [submitting, setSubmitting] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   // Timer
-  const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [timeLeft, setTimeLeft] = useState(0);
   const endTimeRef = useRef<number | null>(null);
 
   // Flags
   const isEndingTestRef = useRef(false);
   const mountedRef = useRef(true);
 
+  // ✅ FIX: Ref to always have latest answers for auto-submit
+  const answersRef = useRef<Record<string, string>>({});
+  const proctoringActivitiesRef = useRef<SuspiciousActivity[]>([]);
+
+  // ✅ FIX: Keep refs in sync with state
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
+  useEffect(() => {
+    proctoringActivitiesRef.current = proctoringActivities;
+  }, [proctoringActivities]);
+
   // Face center detection threshold
   const consecutiveNonCenterCount = useRef(0);
   const CENTER_THRESHOLD = 2;
-  
 
   useEffect(() => {
     mountedRef.current = true;
@@ -111,6 +119,7 @@ export default function TestInterface({
 
     tick();
     const id = window.setInterval(tick, 1000);
+
     return () => clearInterval(id);
   }, [durationMinutes, hasSubmitted]);
 
@@ -118,7 +127,6 @@ export default function TestInterface({
   const showToast = (message: string, severity: "low" | "medium" | "high") => {
     const id = `toast-${Date.now()}-${Math.random()}`;
     setToasts(prev => [...prev, { id, message, severity }]);
-
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, 5000);
@@ -131,7 +139,6 @@ export default function TestInterface({
   // ---------- Log activity ----------
   const logActivity = (activity: SuspiciousActivity) => {
     if (isEndingTestRef.current) return;
-
     setProctoringActivities(prev => [...prev, activity]);
 
     const messages = {
@@ -162,7 +169,6 @@ export default function TestInterface({
   useEffect(() => {
     const handler = () => {
       if (isEndingTestRef.current) return;
-
       const isFs = !!document.fullscreenElement;
 
       if (!isFs && previouslyFullscreenRef.current) {
@@ -173,7 +179,6 @@ export default function TestInterface({
           details: "User exited fullscreen",
         });
       }
-
       previouslyFullscreenRef.current = isFs;
     };
 
@@ -203,7 +208,6 @@ export default function TestInterface({
   useEffect(() => {
     const handler = () => {
       if (isEndingTestRef.current) return;
-
       logActivity({
         timestamp: new Date().toISOString(),
         type: "app-switch",
@@ -220,7 +224,6 @@ export default function TestInterface({
   useEffect(() => {
     const handler = () => {
       if (isEndingTestRef.current) return;
-
       if (document.visibilityState === "hidden") {
         logActivity({
           timestamp: new Date().toISOString(),
@@ -254,7 +257,6 @@ export default function TestInterface({
       }
     } else {
       consecutiveNonCenterCount.current = 0;
-
       if (activity.type === "face_not_detected" || activity.type === "multiple_faces") {
         logActivity(activity);
       }
@@ -262,105 +264,69 @@ export default function TestInterface({
   };
 
   // ---------- Finish Test ----------
-  // const finishTest = async (auto = false) => {
-  //   if (submitting || hasSubmitted) return;
-
-  //   if (!auto) {
-  //     const ok = confirm("Are you sure you want to submit?");
-  //     if (!ok) return;
-  //   }
-
-  //   isEndingTestRef.current = true;
-  //   setSubmitting(true);
-  //   setHasSubmitted(true);
-  //   setTestActive(false);
-
-  //   const payload = {
-  //     testId,
-  //     studentId: userId,
-  //     answers,
-  //     submittedAt: new Date().toISOString(),
-  //     proctoringLog: proctoringActivities,
-  //     violationCount: proctoringActivities.length,
-  //   };
-
-  //   console.log("📤 Submitting", payload);
-
-  //   try {
-  //     await new Promise(res => setTimeout(res, 2000));
-
-  //     if (document.fullscreenElement) await document.exitFullscreen();
-
-  //     alert(auto ? "⏰ Time's up! Auto-submitted." : "✅ Submitted!");
-  //   } catch (err) {
-  //     alert("❌ Error submitting");
-  //     setHasSubmitted(false);
-  //     setSubmitting(false);
-  //     isEndingTestRef.current = false;
-  //   }
-  // };
-
   const finishTest = async (auto = false) => {
-  if (submitting || hasSubmitted) return;
+    // allow auto-submit even if hasSubmitted was toggled
+    if (submitting) return;
+    if (!auto && hasSubmitted) return;
 
-  if (!auto) {
-    const ok = confirm("Are you sure you want to submit?");
-    if (!ok) return;
-  }
+    if (!auto) {
+      const ok = confirm("Are you sure you want to submit?");
+      if (!ok) return;
+    }
 
-  isEndingTestRef.current = true;
-  setSubmitting(true);
-  setHasSubmitted(true);
-  setTestActive(false);
+    isEndingTestRef.current = true;
+    setSubmitting(true);
+    setHasSubmitted(true);
+    setTestActive(false);
 
-  const payload = {
-    testId,
-    studentId: userId,
-    answers: Object.entries(answers).map(([questionId, selectedOption]) => ({
-      questionId,
-      selectedOption,
-      writtenAnswer: null,
-    })),
-    submittedAt: new Date().toISOString(),
-    proctoringLog: proctoringActivities,
-    violationCount: proctoringActivities.length,
+    // ✅ FIX: Use ref to get latest answers (fixes stale closure issue on auto-submit)
+    const safeAnswers = answersRef.current;
+    const safeActivities = proctoringActivitiesRef.current;
+
+    const payload = {
+      testId,
+      studentId: userId,
+      answers: Object.entries(safeAnswers).map(([questionId, selectedOption]) => ({
+        questionId,
+        selectedOption,
+        writtenAnswer: null,
+      })),
+      submittedAt: new Date().toISOString(),
+      proctoringLog: safeActivities,
+      violationCount: safeActivities.length,
+    };
+
+    console.log("📤 Submitting", payload);
+
+    try {
+      const res = await fetch("/api/submit-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to submit test");
+      }
+
+      if (document.fullscreenElement) await document.exitFullscreen();
+
+      setSubmitting(false);
+
+      setTimeout(() => {
+        alert(auto ? "⏰ Time's up! Auto-submitted." : "✅ Submitted!");
+        window.location.href = `/student-dash/${userId}`;
+      }, 200);
+    } catch (err) {
+      console.error(err);
+      setHasSubmitted(false);
+      setSubmitting(false);
+      isEndingTestRef.current = false;
+      alert("❌ Error submitting test");
+    }
   };
-
-  console.log("📤 Submitting", payload);
-
-  try {
-  const res = await fetch("/api/submit-test", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  const data = await res.json();
-
-  if (!res.ok || !data.success) {
-    throw new Error(data.message || "Failed to submit test");
-  }
-
-  if (document.fullscreenElement) await document.exitFullscreen();
-
-  setSubmitting(false);
-
-  setTimeout(() => {
-    alert(auto ? "⏰ Time's up! Auto-submitted." : "✅ Submitted!");
-    window.location.href = `/student-dash/${userId}`;
-  }, 200);
-
-  // 🔥 Redirect to dashboard
-  window.location.href = `/student-dash/${userId}`;
-
-} catch (err) {
-  console.error(err);
-  setHasSubmitted(false);
-  setSubmitting(false);
-  isEndingTestRef.current = false;
-  alert("❌ Error submitting test");
-}
-};
 
   // ---------- Navigation ----------
   const handleAnswerSelect = (qid: string, opt: string) => {

@@ -195,7 +195,7 @@ export default function SpeechRecognition({
   }, [testActive, onTranscriptReady]);
 
   return (
-    <div className="fixed top-4 right-4 w-80 bg-gray-900 border border-gray-700 rounded-lg p-4 text-white text-sm shadow-lg z-50">
+    <div className="hidden fixed top-4 right-4 w-80 bg-gray-900 border border-gray-700 rounded-lg p-4 text-white text-sm shadow-lg z-50">
       <div className="flex items-center justify-between mb-2">
         <span className="font-semibold">🎤 Voice Monitor</span>
         <span
