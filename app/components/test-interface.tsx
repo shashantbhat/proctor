@@ -364,6 +364,8 @@ export default function TestInterface({
     }
   };
 
+  console.log('these are the proctoring activities', proctoringActivities)
+  // console.log('these are the face detection results', e)
   // ------------------------------------------
   // RENDER
   // ------------------------------------------

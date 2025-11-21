@@ -107,6 +107,27 @@ export const studentResponses = pgTable("student_responses", {
     }[]
   >(),
 
+  violationIds: uuid("violation_ids")
+    .array(),
+
   startedAt: timestamp("started_at").defaultNow(),
   submittedAt: timestamp("submitted_at"),
+});
+
+export const violations = pgTable("violations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+
+  testId: uuid("test_id")
+    .notNull()
+    .references(() => tests.id, { onDelete: "cascade" }),
+
+  studentId: uuid("student_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+
+  event: text("event").notNull(),          // e.g., "face_not_detected", "gaze_left",..
+  severity: text("severity").notNull(),    // "low" | "medium" | "high"
+  message: text("message"),                // readable explanation
+
+  occurredAt: timestamp("occurred_at").defaultNow(),
 });
