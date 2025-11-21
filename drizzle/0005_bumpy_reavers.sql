@@ -1,0 +1,1 @@
+ALTER TABLE "test_participants" ADD CONSTRAINT "one_attempt_per_student" UNIQUE("test_id","student_id");
