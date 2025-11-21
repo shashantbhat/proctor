@@ -15,6 +15,7 @@ export async function getQuestionsByTestId(testId: string) {
         id: questions.id,
         questionText: questions.questionText,
         options: questions.options,
+        imageUrl: questions.imageUrl,
         createdAt: questions.createdAt,
       })
       .from(questions)

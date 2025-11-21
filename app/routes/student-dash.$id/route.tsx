@@ -119,7 +119,7 @@ export default function StudentDashboard() {
 
       {/* Overall Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        {/* <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-blue-600 font-medium">Available Tests</p>
@@ -149,7 +149,7 @@ export default function StudentDashboard() {
               </svg>
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="bg-green-50 border border-green-200 rounded-lg p-6">
           <div className="flex items-center justify-between">
@@ -185,7 +185,7 @@ export default function StudentDashboard() {
       </div>
 
       {/* --- Available Tests --- */}
-      <section className="mb-10">
+      {/* <section className="mb-10">
         <h2 className="text-2xl font-semibold mb-4 text-gray-700">Available Tests</h2>
         {availableTests.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -229,7 +229,7 @@ export default function StudentDashboard() {
             <p className="text-sm text-gray-500 mt-1">Check back later for new tests.</p>
           </div>
         )}
-      </section>
+      </section> */}
 
       {/* --- Attempted Tests with Analytics --- */}
       <section>
@@ -261,17 +261,17 @@ export default function StudentDashboard() {
                     {/* Progress Stats */}
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div className="bg-gray-50 rounded p-2">
-                        <p className="text-xs text-gray-600">Questions</p>
+                        <p className="text-xs text-gray-600">Questions attempted</p>
                         <p className="text-lg font-bold text-gray-900">
                           {analytics.answeredQuestions}/{analytics.totalQuestions}
                         </p>
                       </div>
-                      <div className="bg-gray-50 rounded p-2">
+                      {/* <div className="bg-gray-50 rounded p-2">
                         <p className="text-xs text-gray-600">Progress</p>
                         <p className="text-lg font-bold text-gray-900">
                           {analytics.completionPercentage}%
                         </p>
-                      </div>
+                      </div> */}
                     </div>
 
                     {/* Progress Bar */}

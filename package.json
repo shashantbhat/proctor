@@ -13,6 +13,7 @@
     "@react-router/node": "^7.9.2",
     "@react-router/serve": "^7.9.2",
     "@remix-run/node": "^2.17.1",
+    "@supabase/supabase-js": "^2.84.0",
     "@tensorflow-models/blazeface": "^0.1.0",
     "@tensorflow-models/face-landmarks-detection": "^1.0.6",
     "@tensorflow/tfjs": "^4.22.0",

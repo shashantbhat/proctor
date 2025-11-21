@@ -227,7 +227,7 @@ export default function TeacherDashboard() {
                     <div className="flex-1">
                       <h3 className="font-semibold text-xl text-gray-900">{test.title}</h3>
                       <p className="text-sm text-gray-600 mt-1">{test.description}</p>
-                      <p className="text-xs text-gray-400 mt-2">Test ID: {test.id}</p>
+                      {/* <p className="text-xs text-gray-400 mt-2">Test ID: {test.id}</p> */}
                     </div>
 
                     {/* Quick Stats */}

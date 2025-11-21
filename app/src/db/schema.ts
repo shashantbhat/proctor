@@ -48,6 +48,7 @@ export const questions = pgTable("questions", {
     .references(() => tests.id, { onDelete: "cascade" }),
   questionText: text("question_text").notNull(),
   options: jsonb("options").$type<string[]>(), // ["A", "B", "C", "D"]
+  imageUrl: text("image_url"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

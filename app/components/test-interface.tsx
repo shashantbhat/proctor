@@ -8,6 +8,7 @@ interface Question {
   id: string;
   questionText: string;
   options: string[];
+  imageUrl: string;
 }
 
 interface SuspiciousActivity {
@@ -485,6 +486,14 @@ export default function TestInterface({
         </h2>
 
         <p className="text-lg mb-6">{currentQuestion?.questionText}</p>
+        
+        {currentQuestion?.imageUrl && (
+          <img
+            src={currentQuestion.imageUrl}
+            alt="Question"
+            className="w-full max-w-sm my-2 rounded border"
+          />
+        )}
 
         <div className="space-y-3">
           {currentQuestion?.options?.map(opt => (

@@ -71,6 +71,13 @@
       "when": 1763572514665,
       "tag": "0009_quick_skreet",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1763696260455,
+      "tag": "0010_awesome_tusk",
+      "breakpoints": true
     }
   ]
 }
