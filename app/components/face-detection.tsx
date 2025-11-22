@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 
 interface SuspiciousActivity {
@@ -6,7 +5,7 @@ interface SuspiciousActivity {
   type: "looking_away" | "face_not_detected" | "multiple_faces" | "looking_down" | "looking_sideways" | "looking_up";
   severity: "low" | "medium" | "high";
   details: string;
-  duration?: number; // Duration in seconds
+  duration?: number;
 }
 
 interface FaceDetectionProps {
@@ -47,6 +46,14 @@ export default function FaceDetection({
   const isInitializedRef = useRef<boolean>(false);
   const faceapiRef = useRef<any>(null);
   
+  // ✅ FIX: Ref to always have the latest callback
+  const onActivityLoggedRef = useRef(onActivityLogged);
+
+  // ✅ FIX: Keep ref in sync with prop
+  useEffect(() => {
+    onActivityLoggedRef.current = onActivityLogged;
+  }, [onActivityLogged]);
+
   // Track start time of current violation state
   const violationStartTimeRef = useRef<{
     lookingDown: number | null;
@@ -97,15 +104,14 @@ export default function FaceDetection({
     multipleFaces: 0
   });
 
-  // Optimized thresholds for proctoring
   const THRESHOLDS = {
-    yaw: { left: 25, right: -25 },        // More lenient for natural movement
-    pitch: { up: -15, down: 20 },         // Stricter on down (phone checking)
-    consecutive: 5,                        // More frames = fewer false positives
-    alertCooldown: 4000,                  // 4 seconds between alerts
-    confidenceMin: 0.5,                   // Lower for better detection
-    inputSize: 224,                       // Optimal for webcam: 160, 224, or 320
-    loggingDuration: 2000                 // Log after 2 seconds of continuous violation
+    yaw: { left: 25, right: -25 },
+    pitch: { up: -15, down: 20 },
+    consecutive: 5,
+    alertCooldown: 4000,
+    confidenceMin: 0.5,
+    inputSize: 224,
+    loggingDuration: 2000
   };
 
   useEffect(() => {
@@ -113,7 +119,6 @@ export default function FaceDetection({
       try {
         setDebugInfo("Loading face-api.js library...");
         
-        // Load face-api.js from CDN
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js';
         script.async = false;
@@ -125,7 +130,6 @@ export default function FaceDetection({
           setDebugInfo("Loading TinyFaceDetector (optimized for webcam)...");
           const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
           
-          // Load only necessary models for performance
           await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
           setDebugInfo("Loading 68-point facial landmarks...");
           await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
@@ -133,7 +137,7 @@ export default function FaceDetection({
           setIsModelLoaded(true);
           setFaceDetectionStatus("Models loaded ✓");
           setDebugInfo("Ready for proctoring!");
-          console.log("✅ Face-api.js models loaded (optimized for webcam tracking)");
+          console.log("✅ Face-api.js models loaded");
         };
         
         script.onerror = () => {
@@ -195,7 +199,7 @@ export default function FaceDetection({
               isProctoringRef.current = true;
               setFaceDetectionStatus("🔴 LIVE - Monitoring Active");
               setDebugInfo("Face detection running...");
-              console.log("✅ Starting optimized face detection loop");
+              console.log("✅ Starting face detection loop");
               detectFaces();
             }).catch(err => {
               console.error("Error playing video:", err);
@@ -208,7 +212,7 @@ export default function FaceDetection({
       console.error("Error accessing camera:", error);
       setFaceDetectionStatus("Camera access denied ✗");
       setDebugInfo(`Camera error: ${error}`);
-      alert("⚠️ Camera access is required for proctored tests. Please enable camera permissions.");
+      alert("⚠️ Camera access is required for proctored tests.");
     }
   };
 
@@ -245,22 +249,19 @@ export default function FaceDetection({
     }
 
     try {
-      // Use TinyFaceDetector with optimized settings for webcam tracking
       const detections = await faceapi
         .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({
-          inputSize: THRESHOLDS.inputSize,  // 224 is optimal balance
+          inputSize: THRESHOLDS.inputSize,
           scoreThreshold: THRESHOLDS.confidenceMin
         }))
         .withFaceLandmarks();
 
-      // Update FPS
       updateFPS();
 
       const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Draw detections
         if (detections.length > 0) {
           const resizedDetections = faceapi.resizeResults(detections, {
             width: canvas.width,
@@ -293,7 +294,7 @@ export default function FaceDetection({
     }
   };
 
-  const analyzeGaze = (detection: any) => {
+ const analyzeGaze = (detection: any) => {
     const landmarks = detection.landmarks.positions;
     
     // Key facial landmarks (68-point model)
@@ -466,13 +467,11 @@ export default function FaceDetection({
     violations.noFace++;
     const now = Date.now();
     
-    // Start tracking time if this is the first frame of violation
     if (violationStartTimeRef.current.noFace === null) {
       violationStartTimeRef.current.noFace = now;
       violationLoggedRef.current.noFace = false;
     }
     
-    // Check if violation has lasted 2+ seconds and hasn't been logged yet
     const duration = now - violationStartTimeRef.current.noFace;
     if (duration >= THRESHOLDS.loggingDuration && !violationLoggedRef.current.noFace) {
       logViolationWithDuration("face_not_detected", "high", "Face left camera view", duration);
@@ -483,18 +482,15 @@ export default function FaceDetection({
     
     setGazeDirection('no face');
     setGazeMetrics({ yaw: 0, pitch: 0, roll: 0, confidence: 0 });
-    
-    // see here is the no face detected coming from
 
-    //here i also need to add the activity logging if left/right/up/down for more than an amount of time.
-    if (violations.noFace >= THRESHOLDS.consecutive) {
-      if (now - lastAlertTimeRef.current > THRESHOLDS.alertCooldown) {
-        logActivity("face_not_detected", "high", "Face left camera view");
-        setCurrentAlert("⚠️ No face detected! Stay visible to camera.");
-        lastAlertTimeRef.current = now;
-        setTimeout(() => setCurrentAlert(""), 3000);
-      }
-    }
+    // if (violations.noFace >= THRESHOLDS.consecutive) {
+    //   if (now - lastAlertTimeRef.current > THRESHOLDS.alertCooldown) {
+    //     logActivity("face_not_detected", "high", "Face left camera view");
+    //     setCurrentAlert("⚠️ No face detected! Stay visible to camera.");
+    //     lastAlertTimeRef.current = now;
+    //     setTimeout(() => setCurrentAlert(""), 3000);
+    //   }
+    // }
   };
 
   const handleMultipleFaces = (count: number) => {
@@ -502,13 +498,11 @@ export default function FaceDetection({
     violations.multipleFaces++;
     const now = Date.now();
     
-    // Start tracking time if this is the first frame of violation
     if (violationStartTimeRef.current.multipleFaces === null) {
       violationStartTimeRef.current.multipleFaces = now;
       violationLoggedRef.current.multipleFaces = false;
     }
     
-    // Check if violation has lasted 2+ seconds and hasn't been logged yet
     const duration = now - violationStartTimeRef.current.multipleFaces;
     if (duration >= THRESHOLDS.loggingDuration && !violationLoggedRef.current.multipleFaces) {
       logViolationWithDuration("multiple_faces", "high", `${count} people detected in frame`, duration);
@@ -519,24 +513,26 @@ export default function FaceDetection({
     
     setGazeDirection('multiple');
     
-    if (violations.multipleFaces >= THRESHOLDS.consecutive) {
-      if (now - lastAlertTimeRef.current > THRESHOLDS.alertCooldown) {
-        logActivity("multiple_faces", "high", `${count} people detected in frame`);
-        setCurrentAlert(`⚠️ ${count} faces detected! Only you should be visible.`);
-        lastAlertTimeRef.current = now;
-        setTimeout(() => setCurrentAlert(""), 3000);
-      }
-    }
+    // if (violations.multipleFaces >= THRESHOLDS.consecutive) {
+    //   if (now - lastAlertTimeRef.current > THRESHOLDS.alertCooldown) {
+    //     logActivity("multiple_faces", "high", `${count} people detected in frame`);
+    //     setCurrentAlert(`⚠️ ${count} faces detected! Only you should be visible.`);
+    //     lastAlertTimeRef.current = now;
+    //     setTimeout(() => setCurrentAlert(""), 3000);
+    //   }
+    // }
   };
 
   const resetViolations = (except: string[]) => {
     const violations = consecutiveViolationsRef.current;
     const startTimes = violationStartTimeRef.current;
+    const logged = violationLoggedRef.current;
     
     Object.keys(violations).forEach(key => {
       if (!except.includes(key)) {
         (violations as any)[key] = 0;
         (startTimes as any)[key] = null;
+        (logged as any)[key] = false;  // ✅ Also reset the logged flag
       }
     });
   };
@@ -559,6 +555,7 @@ export default function FaceDetection({
     setFps(avgFps);
   };
 
+  // ✅ FIX: Use ref for callback
   const logViolationWithDuration = (
     type: SuspiciousActivity["type"],
     severity: SuspiciousActivity["severity"],
@@ -570,29 +567,27 @@ export default function FaceDetection({
       type,
       severity,
       details,
-      duration: Math.round(duration / 1000) // Convert to seconds
+      duration: Math.round(duration / 1000)
     };
 
     setSuspiciousActivities(prev => [...prev, activity]);
 
-    if (onActivityLogged) {
-      onActivityLogged(activity);
+    // ✅ Use ref instead of prop
+    if (onActivityLoggedRef.current) {
+      console.log("📤 Sending to parent:", activity);
+      onActivityLoggedRef.current(activity);
     }
 
-    console.log("🚨 VIOLATION LOGGED:", {
-      name: type,
-      severity: severity,
-      timestamp: new Date(activity.timestamp).toLocaleString(),
-      details: activity.details,
-      duration: `${activity.duration}s continuous`
-    });
+    console.log("🚨 VIOLATION LOGGED:", activity);
   };
 
+  // ✅ FIX: Use ref for callback
   const logActivity = (
     type: SuspiciousActivity["type"],
     severity: SuspiciousActivity["severity"],
     details: string
   ) => {
+  
     const activity: SuspiciousActivity = {
       timestamp: new Date().toISOString(),
       type,
@@ -602,8 +597,10 @@ export default function FaceDetection({
 
     setSuspiciousActivities(prev => [...prev, activity]);
 
-    if (onActivityLogged) {
-      onActivityLogged(activity);
+    // ✅ Use ref instead of prop
+    if (onActivityLoggedRef.current) {
+      console.log("📤 Sending to parent:", activity);
+      onActivityLoggedRef.current(activity);
     }
 
     console.log("🚨 Violation logged:", activity);
@@ -614,12 +611,6 @@ export default function FaceDetection({
       stopProctoring();
     };
   }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      (window as any).getFaceDetectionActivities = () => suspiciousActivities;
-    }
-  }, [suspiciousActivities]);
 
   const getDirectionColor = (dir: string) => {
     switch(dir) {
@@ -646,6 +637,8 @@ export default function FaceDetection({
       default: return "👁️";
     }
   };
+
+  // console.log("🔍 TestInterface rendering, handleFaceActivity is:", typeof handleFaceActivity);
 
   return (
     <>
