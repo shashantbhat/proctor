@@ -26,9 +26,6 @@ type Pages = {
   "/exam": {
     params: {};
   };
-  "/face-detection": {
-    params: {};
-  };
   "/get-started": {
     params: {};
   };
@@ -68,7 +65,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/student-dash/:id" | "/teacher-dash/:id" | "/exam" | "/face-detection" | "/get-started" | "/teacher-dash/:id/new-test" | "/test/:test_id" | "/start-test/:testId" | "/start-test/:testId/details" | "/test/:testId/start" | "/api/record-violations" | "/api/submit-test";
+    page: "/" | "/student-dash/:id" | "/teacher-dash/:id" | "/exam" | "/get-started" | "/teacher-dash/:id/new-test" | "/test/:test_id" | "/start-test/:testId" | "/start-test/:testId/details" | "/test/:testId/start" | "/api/record-violations" | "/api/submit-test";
   };
   "routes/home/route.tsx": {
     id: "routes/home/route";
@@ -85,10 +82,6 @@ type RouteFiles = {
   "routes/exam/route.tsx": {
     id: "routes/exam/route";
     page: "/exam";
-  };
-  "routes/face-detection/route.tsx": {
-    id: "routes/face-detection/route";
-    page: "/face-detection";
   };
   "routes/auth/route.tsx": {
     id: "routes/auth/route";

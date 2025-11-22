@@ -19,10 +19,10 @@ export default [
         path: "/exam",
         file: "routes/exam/route.tsx", // Exam route
     },
-    {
-        path: "/face-detection",
-        file: "routes/face-detection/route.tsx", // Exam route
-    },
+    // {
+    //     path: "/face-detection",
+    //     file: "components/face-detection", // Exam route
+    // },
     {
         path: "/get-started",
         file: "routes/auth/route.tsx", // Exam route

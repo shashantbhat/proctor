@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { X } from "lucide-react";
-import FaceDetection from "~/routes/face-detection/route";
+import FaceDetection from "~/components/face-detection";
 import SpeechRecognition from "~/routes/speech-recognition/route";
 import { useParams } from "react-router";
 
@@ -26,6 +26,7 @@ interface SuspiciousActivity {
     | "escape-pressed";
   severity: "low" | "medium" | "high";
   details: string;
+  duration?: number;  // ← Add this to match FaceDetection
 }
 
 interface Toast {
@@ -239,7 +240,10 @@ export default function TestInterface({
   }, []);
 
   // ---------- Face Activity ----------
-  const handleFaceActivity = (activity: SuspiciousActivity) => {
+  // In TestInterface, replace handleFaceActivity with this:
+const handleFaceActivity = useCallback((activity: SuspiciousActivity) => {
+    console.log("📹 Face activity received:", activity);
+    
     if (isEndingTestRef.current) return;
 
     const lookingTypes = [
@@ -252,16 +256,35 @@ export default function TestInterface({
     if (lookingTypes.includes(activity.type)) {
       consecutiveNonCenterCount.current++;
       if (consecutiveNonCenterCount.current >= CENTER_THRESHOLD) {
-        logActivity(activity);
+        // ✅ FIX: Directly update state instead of calling logActivity
+        setProctoringActivities(prev => [...prev, activity]);
+        
+        const messages: Record<string, string> = {
+          "looking_away": "⚠️ Please keep your eyes on the screen",
+          "looking_down": "⚠️ Please look at the screen, not down",
+          "looking_sideways": "⚠️ Please look straight at the screen",
+          "looking_up": "⚠️ Please look at the screen, not up",
+        };
+        showToast(messages[activity.type], activity.severity);
+        
         consecutiveNonCenterCount.current = 0;
       }
     } else {
       consecutiveNonCenterCount.current = 0;
+      
       if (activity.type === "face_not_detected" || activity.type === "multiple_faces") {
-        logActivity(activity);
+        // ✅ FIX: Directly update state
+        setProctoringActivities(prev => [...prev, activity]);
+        
+        const messages: Record<string, string> = {
+          "face_not_detected": "⚠️ Face not detected. Stay in view",
+          "multiple_faces": "⚠️ Multiple faces detected",
+        };
+        showToast(messages[activity.type], activity.severity);
       }
     }
-  };
+  }, []); // Empty deps - uses refs which don't need to be in deps
+
 
   // ---------- Finish Test ----------
   const finishTest = async (auto = false) => {

@@ -107,8 +107,8 @@ export const studentResponses = pgTable("student_responses", {
     }[]
   >(),
 
-  violationIds: uuid("violation_ids")
-    .array(),
+  violationId: uuid("violation_id")
+    .references(() => violations.id, { onDelete: "cascade" }),
 
   startedAt: timestamp("started_at").defaultNow(),
   submittedAt: timestamp("submitted_at"),
@@ -125,9 +125,15 @@ export const violations = pgTable("violations", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
 
-  event: text("event").notNull(),          // e.g., "face_not_detected", "gaze_left",..
-  severity: text("severity").notNull(),    // "low" | "medium" | "high"
-  message: text("message"),                // readable explanation
+  // Store all events as a JSON array
+  events: jsonb("events").$type<
+    {
+      event: string;        // "face_not_detected", "tab-switch", etc.
+      severity: string;     // "low" | "medium" | "high"
+      message: string;      // readable explanation
+      occurredAt: string;   // ISO timestamp
+    }[]
+  >().notNull().default([]),
 
-  occurredAt: timestamp("occurred_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
