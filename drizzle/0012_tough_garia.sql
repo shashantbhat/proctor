@@ -1,0 +1,2 @@
+ALTER TABLE "student_responses" RENAME COLUMN "violation_ids" TO "violation_id";--> statement-breakpoint
+ALTER TABLE "student_responses" ADD CONSTRAINT "student_responses_violation_id_violations_id_fk" FOREIGN KEY ("violation_id") REFERENCES "public"."violations"("id") ON DELETE cascade ON UPDATE no action;
