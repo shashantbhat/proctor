@@ -136,7 +136,7 @@ export default function StudentDashboard() {
 
       {/* STATS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        <div className="bg-[#0C1219]/85 border border-emerald-400 rounded-lg p-6">
+        <div className="bg-[#0C1219]/85 border border-emerald-400 rounded-lg p-6 relative z-10 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-500/20">
           <div className="flex w-full justify-between">
             <p className="text-sm text-emerald-400 font-semibold">Completed</p>
             <svg xmlns="http://www.w3.org/2000/svg" className="text-emerald-400" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM224,48V208a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32H208A16,16,0,0,1,224,48ZM208,208V48H48V208H208Z"></path></svg>
@@ -146,7 +146,7 @@ export default function StudentDashboard() {
           </p>
         </div>
 
-        <div className="bg-[#0C1219]/85 border border-emerald-400 rounded-lg p-6">
+        <div className="bg-[#0C1219]/85 border border-emerald-400 rounded-lg p-6 relative z-10 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-500/20">
           <div className="flex w-full justify-between">
             <p className="text-sm text-emerald-400 font-semibold">Total Attempted</p>
             <svg xmlns="http://www.w3.org/2000/svg" className="text-emerald-400" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.6A16.05,16.05,0,0,0,200,75.64ZM72,40H184V75.64L178.23,80H77.33L72,76Zm56,78L98.67,96h58.4Zm56,98H72V180l48-36v24a8,8,0,0,0,16,0V144.08l48,36.28Z"></path></svg>
