@@ -1,9 +1,15 @@
 import { useState } from "react";
-import { Form, useActionData, useNavigation } from "react-router";
+import { Form, useActionData, useNavigation, type MetaFunction } from "react-router";
 import { json, redirect, type ActionFunction } from "@remix-run/node";
 import { registerUser } from "~/server/db.server";
 import { action as authAction } from "~/server/auth.server";
-import Iridescence from "~/components/Iridescence";
+
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "ProctorSync • Get Started" }   // <-- Your page title
+  ];
+};
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
@@ -86,6 +92,7 @@ export default function AuthPage() {
     email?: string;
     password?: string;
   }>({});
+  const [isFormActive, setIsFormActive] = useState(false);
   
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
@@ -145,20 +152,32 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="w-screen h-screen relative">
-      {/* Background */}
-      <div className="w-full h-full absolute inset-0">
-        <Iridescence
-          color={[0.5, 0.7, 1]}
-          mouseReact={false}
-          amplitude={0.1}
-          speed={1.0}
-        />
-      </div>
-
+    <div className="w-screen h-screen relative bg-gradient-to-b from-[#142E29] to-[#031B1D]">
       {/* Form Container */}
       <div className="absolute inset-0 flex items-center justify-center z-10">
-        <div className="bg-white shadow-md rounded-2xl p-8 w-full max-w-md backdrop-blur-md bg-opacity-90">
+
+        {/* Gradient Background (shows on hover or focus inside form) */}
+        <img
+          src="https://qblapbmmhjyxpoeyhjrf.supabase.co/storage/v1/object/public/question-images/assets/bg-grad-get-started.png"
+          className={`
+            w-full h-full object-contain absolute inset-0
+            transition-opacity duration-500 
+            pointer-events-none
+            ${isFormActive ? 'opacity-100' : 'opacity-0'}
+          `}
+        />
+        <div 
+          className="bg-white/85 shadow-md rounded-2xl p-8 w-full max-w-md backdrop-blur-md bg-opacity-90 relative z-10"
+          onMouseEnter={() => setIsFormActive(true)}
+          onMouseLeave={() => setIsFormActive(false)}
+          // onFocus={() => setIsFormActive(true)}
+          // onBlur={(e) => {
+          //   // Only hide if focus is leaving the form container entirely
+          //   if (!e.currentTarget.contains(e.relatedTarget)) {
+          //     setIsFormActive(false);
+          //   }
+          // }}
+        >
           {/* Mode Toggle */}
           <div className="flex justify-center mb-6 gap-4">
             <button
@@ -168,8 +187,8 @@ export default function AuthPage() {
               }}
               className={`px-4 py-2 font-medium rounded-lg transition-all ${
                 mode === "signin"
-                  ? "bg-black text-white"
-                  : "text-gray-600 hover:bg-gray-100"
+                  ? "bg-gradient-to-r from-emerald-700 to bg-emerald-500 text-white"
+                  : "text-gray-500 hover:bg-gray-300"
               }`}
             >
               Sign In
@@ -181,8 +200,8 @@ export default function AuthPage() {
               }}
               className={`px-4 py-2 font-medium rounded-lg transition-all ${
                 mode === "signup"
-                  ? "bg-black text-white"
-                  : "text-gray-600 hover:bg-gray-100"
+                  ? "bg-gradient-to-r from-emerald-700 to bg-emerald-500 text-white"
+                  : "text-gray-500 hover:bg-gray-300"
               }`}
             >
               Sign Up
@@ -194,16 +213,16 @@ export default function AuthPage() {
             <div className="flex justify-center mb-6 text-gray-700 text-sm">
               <span
                 onClick={() => setRole("student")}
-                className={`cursor-pointer font-medium mx-2 ${
-                  role === "student" ? "text-black" : "text-gray-400"
+                className={`cursor-pointer font-medium mx-2 px-2 py-1 ${
+                  role === "student" ? "text-black" : "text-gray-500 hover:bg-gray-300 rounded-full"
                 }`}
               >
                 As a Student
               </span>
               <span
                 onClick={() => setRole("teacher")}
-                className={`cursor-pointer font-medium ${
-                  role === "teacher" ? "text-black" : "text-gray-400"
+                className={`cursor-pointer font-medium px-2 py-1 ${
+                  role === "teacher" ? "text-black" : "text-gray-500 hover:bg-gray-300  rounded-full"
                 }`}
               >
                 As a Teacher
@@ -241,8 +260,8 @@ export default function AuthPage() {
                   required
                   placeholder="Enter your full name"
                   onBlur={(e) => handleBlur("name", e.target.value)}
-                  className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                    validationErrors.name ? "border-red-500" : "border-gray-300"
+                  className={`w-full p-2 border-1 rounded-lg focus:border-emerald-500 outline-none ${
+                    validationErrors.name ? "border-red-500" : "border-gray-400"
                   }`}
                 />
                 {validationErrors.name && (
@@ -263,8 +282,8 @@ export default function AuthPage() {
                 required
                 placeholder="Enter your email"
                 onBlur={(e) => mode === "signup" && handleBlur("email", e.target.value)}
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                  validationErrors.email ? "border-red-500" : "border-gray-300"
+                className={`w-full p-2 border-1 rounded-lg focus:border-emerald-500 outline-none ${
+                  validationErrors.email ? "border-red-500" : "border-gray-400"
                 }`}
               />
               {validationErrors.email && (
@@ -284,8 +303,8 @@ export default function AuthPage() {
                 required
                 placeholder="••••••••"
                 onBlur={(e) => mode === "signup" && handleBlur("password", e.target.value)}
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                  validationErrors.password ? "border-red-500" : "border-gray-300"
+                className={`w-full p-2 border-1 rounded-lg focus:border-emerald-500 outline-none ${
+                  validationErrors.password ? "border-red-500" : "border-gray-400"
                 }`}
               />
               {validationErrors.password && (
@@ -302,10 +321,10 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full py-2 font-semibold text-white rounded-lg transition-all ${
+              className={`w-full py-2 font-semibold text-white rounded-lg transition-all bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-500 ${
                 isSubmitting
-                  ? "bg-blue-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
+                  ? "cursor-not-allowed"
+                  : ""
               }`}
             >
               {isSubmitting
