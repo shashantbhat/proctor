@@ -172,7 +172,7 @@ export default function StudentDashboard() {
               return (
                 <div
                   key={test.testId}
-                  className="rounded-2xl bg-[#0C1219]/85 backdrop-blur-lg p-6 border border-white/10 shadow-xl hover:shadow-2xl transition"
+                  className="rounded-2xl bg-[#0C1219]/85 backdrop-blur-lg p-6 transition"
                 >
                   {/* Title + Status */}
                   <div className="flex justify-between items-start mb-4">
@@ -186,7 +186,7 @@ export default function StudentDashboard() {
                           : "bg-yellow-500/20 text-yellow-300"
                       }`}
                     >
-                      {isDone ? "Completed" : "In Progress"}
+                      {isDone ? "Completed" : "Attempted"}
                     </span>
                   </div>
 
@@ -196,8 +196,9 @@ export default function StudentDashboard() {
 
                   {/* Progress */}
                   <div className="mb-3">
-                    <p className="text-xs text-white/85 mb-1">
-                      Attempted Questions:
+                    <p className="flex flex-col text-xs text-white/85 mb-1">
+                      <span>Attempted Questions:</span>
+                      <span className="italic pt-2 text-[11px] text-white/85 mb-1">{isDone ? "" : "Answers don't get marked if test not submitted"}</span>
                     </p>
                     <p className="text-xl font-bold text-emerald-400">
                       {analytics.answeredQuestions}/{analytics.totalQuestions}
@@ -244,14 +245,14 @@ export default function StudentDashboard() {
                   </div>
 
                   {/* Continue Button */}
-                  {!isDone && (
+                  {/* {!isDone && (
                     <Link
                       to={`/start-test/${test.testId}`}
                       className="block text-center bg-yellow-500/90 hover:bg-yellow-600 text-black font-semibold py-2 rounded-xl transition"
                     >
                       Continue Test
                     </Link>
-                  )}
+                  )} */}
                 </div>
               );
             })}
