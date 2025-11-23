@@ -26,6 +26,7 @@
     "face-api.js": "^0.22.2",
     "firebase": "^12.6.0",
     "firebase-admin": "^13.6.0",
+    "groq-sdk": "^0.36.0",
     "isbot": "^5.1.31",
     "lucide-react": "^0.544.0",
     "ogl": "^1.0.11",

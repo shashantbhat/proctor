@@ -60,12 +60,18 @@ type Pages = {
   "/api/submit-test": {
     params: {};
   };
+  "/api/process-speech-analysis": {
+    params: {};
+  };
+  "/api/analyse-transcript": {
+    params: {};
+  };
 };
 
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/student-dash/:id" | "/teacher-dash/:id" | "/exam" | "/get-started" | "/teacher-dash/:id/new-test" | "/test/:test_id" | "/start-test/:testId" | "/start-test/:testId/details" | "/test/:testId/start" | "/api/record-violations" | "/api/submit-test";
+    page: "/" | "/student-dash/:id" | "/teacher-dash/:id" | "/exam" | "/get-started" | "/teacher-dash/:id/new-test" | "/test/:test_id" | "/start-test/:testId" | "/start-test/:testId/details" | "/test/:testId/start" | "/api/record-violations" | "/api/submit-test" | "/api/process-speech-analysis" | "/api/analyse-transcript";
   };
   "routes/home/route.tsx": {
     id: "routes/home/route";
@@ -114,5 +120,13 @@ type RouteFiles = {
   "routes/api/submit-test.tsx": {
     id: "routes/api/submit-test";
     page: "/api/submit-test";
+  };
+  "routes/api/process-speech-analysis.tsx": {
+    id: "routes/api/process-speech-analysis";
+    page: "/api/process-speech-analysis";
+  };
+  "routes/api/analyse-transcript.tsx": {
+    id: "routes/api/analyse-transcript";
+    page: "/api/analyse-transcript";
   };
 };

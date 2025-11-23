@@ -64,6 +64,8 @@ export default function TestInterface({
   const [timeLeft, setTimeLeft] = useState(0);
   const endTimeRef = useRef<number | null>(null);
 
+  const autoSubmitTriggeredRef = useRef(false);
+
   // Flags
   const isEndingTestRef = useRef(false);
   const mountedRef = useRef(true);
@@ -115,8 +117,10 @@ export default function TestInterface({
 
       if (diff <= 0) {
         setTimeLeft(0);
-        if (!hasSubmitted && !isEndingTestRef.current) {
-          // Time's up - trigger auto submit
+        // ✅ FIX: Use ref instead of state to prevent multiple calls
+        if (!autoSubmitTriggeredRef.current && !isEndingTestRef.current) {
+          autoSubmitTriggeredRef.current = true;
+          console.log("⏰ Timer expired - triggering auto-submit");
           handleTimeUp();
         }
       } else {
@@ -128,7 +132,8 @@ export default function TestInterface({
     const id = window.setInterval(tick, 1000);
 
     return () => clearInterval(id);
-  }, [durationMinutes, hasSubmitted]);
+  // ✅ FIX: Removed hasSubmitted from dependencies - use refs instead
+  }, [durationMinutes]);
 
   // ---------- Toasts ----------
   const showToast = (
@@ -181,6 +186,8 @@ export default function TestInterface({
 
     showToast(messages[activity.type], activity.severity);
   };
+
+  
 
   // expose for face detection component
   useEffect(() => {
@@ -308,8 +315,13 @@ export default function TestInterface({
 
   // ---------- Time Up Handler ----------
   const handleTimeUp = () => {
-    if (isEndingTestRef.current) return;
+    // ✅ FIX: Additional safety check
+    if (isEndingTestRef.current || submitting) {
+      console.log("⚠️ Auto-submit blocked - already submitting");
+      return;
+    }
     
+    console.log("⏰ Time's up - triggering auto-submit");
     showToast("⏰ Time's up! Your test is being submitted automatically.", "warning");
     
     setTimeout(() => {
@@ -317,68 +329,132 @@ export default function TestInterface({
     }, 2000);
   };
 
+
   // ---------- Finish Test ----------
   const finishTest = async (auto = false) => {
-    if (submitting) return;
-    if (!auto && hasSubmitted) return;
+  // ✅ FIX: Enhanced guard to prevent duplicate submissions
+  if (isEndingTestRef.current) {
+    console.log("⚠️ Submission already in progress, skipping...");
+    return;
+  }
+  
+  if (submitting) {
+    console.log("⚠️ Already submitting, skipping...");
+    return;
+  }
+  
+  if (!auto && hasSubmitted) {
+    console.log("⚠️ Already submitted, skipping...");
+    return;
+  }
 
-    isEndingTestRef.current = true;
-    setSubmitting(true);
-    setHasSubmitted(true);
-    setTestActive(false);
+  // ✅ FIX: Set flag immediately to prevent race conditions
+  isEndingTestRef.current = true;
+  setSubmitting(true);
+  setHasSubmitted(true);
+  setTestActive(false);
 
-    const safeAnswers = answersRef.current;
-    const safeActivities = proctoringActivitiesRef.current;
+  console.log(`📤 Starting ${auto ? 'auto-' : ''}submission...`); // ✅ FIXED: Added parentheses
 
-    const payload = {
-      testId,
-      studentId: userId,
-      answers: Object.entries(safeAnswers).map(([questionId, selectedOption]) => ({
-        questionId,
-        selectedOption,
-        writtenAnswer: null,
-      })),
-      submittedAt: new Date().toISOString(),
-      proctoringLog: safeActivities,
-      violationCount: safeActivities.length,
-    };
+  const safeAnswers = answersRef.current;
+  const safeActivities = proctoringActivitiesRef.current;
+  const safeTranscript = finalTranscript; // ✅ Capture current transcript
 
-    console.log("📤 Submitting", payload);
-
-    try {
-      const res = await fetch("/api/submit-test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || "Failed to submit test");
-      }
-
-      if (document.fullscreenElement) await document.exitFullscreen();
-
-      setSubmitting(false);
-
-      // Show success toast
-      showToast(
-        auto ? "⏰ Time's up! Test auto-submitted successfully." : "✅ Test submitted successfully!",
-        "success"
-      );
-
-      setTimeout(() => {
-        window.location.href = `/student-dash/${userId}`;
-      }, 2000);
-    } catch (err) {
-      console.error(err);
-      setHasSubmitted(false);
-      setSubmitting(false);
-      isEndingTestRef.current = false;
-      showToast("❌ Failed to submit test. Please try again.", "error");
-    }
+  const payload = {
+    testId,
+    studentId: userId,
+    answers: Object.entries(safeAnswers).map(([questionId, selectedOption]) => ({
+      questionId,
+      selectedOption,
+      writtenAnswer: null,
+    })),
+    submittedAt: new Date().toISOString(),
+    proctoringLog: safeActivities,
+    violationCount: safeActivities.length,
   };
+
+  console.log("📤 Submitting payload:", payload);
+
+  try {
+    // Step 1: Submit test answers
+    const res = await fetch("/api/submit-test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Failed to submit test");
+    }
+
+    console.log("✅ Test submission successful");
+
+    // Exit fullscreen
+    if (document.fullscreenElement) {
+      await document.exitFullscreen().catch(() => {
+        console.warn("Could not exit fullscreen");
+      });
+    }
+
+    // -------------------------------
+    // SPEECH ANALYSIS USING API 🔥
+    // -------------------------------
+    try {
+      if (safeTranscript && safeTranscript.trim().length > 0) {
+        console.log("🎤 Sending transcript to process-speech-analysis API");
+        
+        const speechRes = await fetch("/api/process-speech-analysis", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            testId,
+            studentId: userId,
+            transcript: safeTranscript,
+          }),
+        });
+
+        const speechData = await speechRes.json();
+
+        if (!speechRes.ok || !speechData.success) {
+          console.error("❌ Speech analysis failed:", speechData.message);
+        } else {
+          console.log("✅ Speech analysis stored:", speechData.analysis);
+        }
+      } else {
+        console.warn("⚠️ No transcript found. Skipping speech analysis.");
+      }
+    } catch (speechErr) {
+      // Don't fail the entire submission if speech analysis fails
+      console.error("❌ Error calling speech analysis API:", speechErr);
+    }
+
+    // Notify success
+    setSubmitting(false);
+    showToast(
+      auto
+        ? "⏰ Time's up! Test auto-submitted successfully."
+        : "✅ Test submitted successfully!",
+      "success"
+    );
+
+    console.log("✅ Submission complete, redirecting...");
+
+    setTimeout(() => {
+      window.location.href = `/student-dash/${userId}`;
+    }, 2000);
+    
+  } catch (err) {
+    console.error("❌ Test submission error:", err);
+    // ✅ FIX: Reset ALL flags on error to allow retry
+    setHasSubmitted(false);
+    setSubmitting(false);
+    isEndingTestRef.current = false;
+    autoSubmitTriggeredRef.current = false; // ✅ ADDED: Reset this too
+    showToast("❌ Failed to submit test. Please try again.", "error");
+  }
+};
 
   // ---------- Navigation ----------
   const handleAnswerSelect = (qid: string, opt: string) => {
