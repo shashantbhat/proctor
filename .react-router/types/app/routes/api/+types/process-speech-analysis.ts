@@ -2,7 +2,7 @@
 
 import type { GetInfo, GetAnnotations } from "react-router/internal";
 
-type Module = typeof import("../../../components/process-speech-analysis.js")
+type Module = typeof import("../process-speech-analysis.js")
 
 type Info = GetInfo<{
   file: "routes/api/process-speech-analysis.tsx",
@@ -14,7 +14,7 @@ type Matches = [{
   module: typeof import("../../../root.js");
 }, {
   id: "routes/api/process-speech-analysis";
-  module: typeof import("../../../components/process-speech-analysis.js");
+  module: typeof import("../process-speech-analysis.js");
 }];
 
 type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }, false>;
