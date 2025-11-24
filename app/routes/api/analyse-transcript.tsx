@@ -21,7 +21,7 @@ Transcript:
 `;
 
   const response = await groq.chat.completions.create({
-    model: "llama-3.1-70b-versatile",
+    model: "llama-3.3-70b-versatile",
     messages: [
       { role: "system", content: "You must respond ONLY in JSON." },
       { role: "user", content: prompt }

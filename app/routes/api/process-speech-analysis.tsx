@@ -1,21 +1,29 @@
-import { analyzeTranscript } from "./analyse-transcript";
-import { storeSpeechAnalysis } from "~/server/add-speech-analysis";
+import { json } from "@remix-run/node";
+import { processSpeechAnalysis } from "~/components/process-speech-analysis"
+// adjust import path to where your helper actually is
 
-export async function processSpeechAnalysis(
-  testId: string,
-  studentId: string,
-  transcript: string
-) {
-  if (!transcript.trim()) return;
+export async function action({ request }) {
+  try {
+    const form = await request.formData(); // ✅ FIXED
 
-  // 1. Call Groq for analysis
-  const analysis = await analyzeTranscript(transcript);
+    const testId = form.get("testId");
+    const studentId = form.get("studentId");
+    const transcript = form.get("transcript");
 
-  // 2. Add full transcript to result for DB
-  analysis.fullTranscript = transcript;
+    if (!testId || !studentId || !transcript) {
+      return json({ error: "Missing fields" }, { status: 400 });
+    }
 
-  // 3. Store in DB
-  await storeSpeechAnalysis(testId, studentId, analysis);
+    // Call your original helper function
+    const analysis = await processSpeechAnalysis(
+      testId.toString(),
+      studentId.toString(),
+      transcript.toString()
+    );
 
-  return analysis;
+    return json({ success: true, analysis });
+  } catch (err) {
+    console.error("Speech analysis error:", err);
+    return json({ error: err.message }, { status: 500 });
+  }
 }

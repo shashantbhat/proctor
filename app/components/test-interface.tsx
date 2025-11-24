@@ -402,17 +402,18 @@ export default function TestInterface({
     // SPEECH ANALYSIS USING API 🔥
     // -------------------------------
     try {
-      if (safeTranscript && safeTranscript.trim().length > 0) {
+    if (safeTranscript && safeTranscript.trim().length > 0) {
         console.log("🎤 Sending transcript to process-speech-analysis API");
+        
+        const formData = new FormData();
+        formData.append("testId", testId || "");
+        formData.append("studentId", userId);
+        formData.append("transcript", safeTranscript);
+        formData.append("action", "process-speech");
         
         const speechRes = await fetch("/api/process-speech-analysis", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            testId,
-            studentId: userId,
-            transcript: safeTranscript,
-          }),
+          body: formData,
         });
 
         const speechData = await speechRes.json();
@@ -424,11 +425,12 @@ export default function TestInterface({
         }
       } else {
         console.warn("⚠️ No transcript found. Skipping speech analysis.");
-      }
+    }
     } catch (speechErr) {
       // Don't fail the entire submission if speech analysis fails
       console.error("❌ Error calling speech analysis API:", speechErr);
-    }
+  }
+
 
     // Notify success
     setSubmitting(false);
