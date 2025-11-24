@@ -137,3 +137,43 @@ export const violations = pgTable("violations", {
 
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// ---------------------
+// Speech Analysis Table
+// ---------------------
+export const speechAnalysis = pgTable(
+  "speech_analysis",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+
+    testId: uuid("test_id")
+      .notNull()
+      .references(() => tests.id, { onDelete: "cascade" }),
+
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+
+    // The full transcript generated after test is submitted
+    transcript: text("transcript").notNull(),
+
+    // Cheating probability returned by Groq
+    cheatingProbability: varchar("cheating_probability", { length: 10 }).notNull(),
+
+    // List of issues detected (JSON array from LLM)
+    issuesDetected: jsonb("issues_detected").$type<string[]>().notNull(),
+
+    // Short summary from model
+    summary: text("summary").notNull(),
+
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+
+  // Unique constraint → one analysis per student per test
+  (table) => ({
+    oneAnalysisPerStudent: unique("one_analysis_per_student").on(
+      table.testId,
+      table.studentId
+    ),
+  })
+);

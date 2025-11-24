@@ -4,7 +4,8 @@ import Orb from "~/components/Orb";
 
 const Dashboard = () => {
     return (
-        <section className="relative w-screen h-screen sm:min-h-svh overflow-hidden text-white bg-black">
+        // <section className="relative w-screen h-screen sm:min-h-svh overflow-hidden text-white bg-gradient-to-r from-[#031B1D] to-[#052F34]">
+        <section className="relative w-screen h-screen sm:min-h-svh overflow-hidden text-white bg-[#031B1D]">
             <div className="relative w-full h-[600px] mt-16 flex items-center justify-center">
                 <Orb
                 hoverIntensity={1}

@@ -37,7 +37,7 @@ const Navbar = () => {
                     {/* Left: Brand + Links */}
                     <div className="flex items-center space-x-4 sm:space-x-8">
                         <div className="text-xl font-semibold">
-                            Proctor
+                            ProctorSync
                         </div>
 
                         {/* <div className="border-l border-gray-300 h-6"></div> */}
@@ -53,7 +53,7 @@ const Navbar = () => {
                         to="/get-started"
                         className="bg-white text-black text-xs sm:text-sm px-2 py-1 rounded-[10px] sm:rounded-lg"
                         >
-                        Sign Up
+                        Get Started
                     </Link>
                 </div>
             </GlassSurface>

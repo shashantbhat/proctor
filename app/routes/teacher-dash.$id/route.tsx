@@ -1,4 +1,5 @@
-import { Link, useLoaderData, Form, useNavigate } from "react-router";
+import { useState } from "react";
+import { Link, useLoaderData, Form, useNavigate, type MetaFunction } from "react-router";
 import {
   json,
   redirect,
@@ -10,6 +11,19 @@ import { tests, testParticipants, studentResponses, questions } from "~/src/db/s
 import { eq, and, count, sql } from "drizzle-orm";
 import { closeTest } from "~/server/close-test";
 import { sessionStorage } from "~/server/session.server";
+import { X } from "lucide-react";
+
+interface Toast {
+  id: string;
+  message: string;
+  type: "success" | "error" | "warning";
+}
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Teacher Dashboard" }   // <-- Your page title
+  ];
+};
 
 export const loader: LoaderFunction = async ({ request }) => {
   // ✅ Get session
@@ -113,202 +127,296 @@ export const action: ActionFunction = async ({ request }) => {
 export default function TeacherDashboard() {
   const { activeTests, baseUrl, userId, overallStats } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [pendingCloseTestId, setPendingCloseTestId] = useState<string | null>(null);
+
+  const showToast = (message: string, type: "success" | "error" | "warning") => {
+    const id = `toast-${Date.now()}-${Math.random()}`;
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 5000);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
 
   const handleNewTestClick = () => navigate(`/teacher-dash/${userId}/new-test`);
 
   const handleCopyLink = async (link: string) => {
     try {
       await navigator.clipboard.writeText(link);
-      alert("Link copied to clipboard!");
+      showToast("Link copied", "success");
     } catch {
-      alert("Failed to copy link.");
+      showToast("❌ Failed to copy link", "error");
+    }
+  };
+
+  const handleCloseTestClick = (testId: string) => {
+    setPendingCloseTestId(testId);
+    showToast("Are you sure? This action cannot be undone.", "warning");
+  };
+
+  const confirmCloseTest = (testId: string) => {
+    const form = document.getElementById(`close-form-${testId}`) as HTMLFormElement;
+    if (form) {
+      form.submit();
+      showToast("Test closed successfully", "success");
+    }
+    setPendingCloseTestId(null);
+  };
+
+  const cancelCloseTest = () => {
+    setPendingCloseTestId(null);
+    removeToast(toasts[toasts.length - 1]?.id);
+  };
+
+  const getToastColor = (type: string) => {
+    switch (type) {
+      case "success": return "bg-emerald-600 border-none";
+      case "error": return "bg-red-600 border-red-500";
+      case "warning": return "bg-yellow-500 border-yellow-500";
+      default: return "bg-blue-600 border-blue-500";
     }
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header with logout */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Teacher Dashboard</h1>
-        <Form method="post">
-          <input type="hidden" name="intent" value="logout" />
-          <button
-            type="submit"
-            className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition"
-          >
-            Logout
-          </button>
-        </Form>
-      </div>
-
-      {/* Overall Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-blue-600 font-medium">Active Tests</p>
-              <p className="text-3xl font-bold text-blue-900 mt-1">
-                {overallStats.totalTests}
-              </p>
-            </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-green-600 font-medium">Total Participants</p>
-              <p className="text-3xl font-bold text-green-900 mt-1">
-                {overallStats.totalParticipants}
-              </p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-purple-600 font-medium">Total Submissions</p>
-              <p className="text-3xl font-bold text-purple-900 mt-1">
-                {overallStats.totalSubmissions}
-              </p>
-            </div>
-            <div className="bg-purple-100 p-3 rounded-full">
-              <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Create new test */}
-      <div className="mb-6">
-        <button
-          onClick={handleNewTestClick}
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium shadow-md"
-        >
-          + Create New Test
-        </button>
-      </div>
-
-      {/* Active tests with analytics */}
-      <h2 className="text-2xl font-semibold mb-4">Active Tests</h2>
-      {activeTests.length === 0 ? (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-          <p className="text-gray-600">No active tests found. Create your first test to get started!</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {activeTests.map((test) => {
-            const shareableLink = `${baseUrl}/start-test/${test.id}`;
-            const completionRate = test.analytics.participants > 0
-              ? Math.round((Number(test.analytics.submissions) / Number(test.analytics.participants)) * 100)
-              : 0;
-
-            return (
-              <div
-                key={test.id}
-                className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition"
-              >
-                {/* Test Header */}
-                <div className="p-6 border-b border-gray-200">
-                  <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-xl text-gray-900">{test.title}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{test.description}</p>
-                      {/* <p className="text-xs text-gray-400 mt-2">Test ID: {test.id}</p> */}
+    <section className="text-white/85 bg-gradient-to-b from-[#142E29] to-[#031B1D] min-h-screen fixed inset-0 overflow-y-auto">
+      <div className="p-6 max-w-7xl mx-auto">
+        {/* Toasts */}
+        <div className="fixed top-20 right-4 z-[9998] space-y-2 pointer-events-none">
+          {toasts.map(t => (
+            <div
+              key={t.id}
+              className={`${getToastColor(t.type)} border-2 rounded-lg shadow-lg p-4 min-w-[320px] max-w-[400px] pointer-events-auto animate-slide-in`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-white">{t.message}</p>
+                  {t.type === "warning" && pendingCloseTestId && (
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => confirmCloseTest(pendingCloseTestId)}
+                        className="bg-white text-gray-900 px-3 py-1.5 rounded text-xs font-medium hover:bg-gray-100 transition"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        onClick={cancelCloseTest}
+                        className="bg-transparent border border-white text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-white/10 transition"
+                      >
+                        Cancel
+                      </button>
                     </div>
-
-                    {/* Quick Stats */}
-                    <div className="flex gap-4 lg:gap-6">
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-blue-600">{test.analytics.questions}</p>
-                        <p className="text-xs text-gray-500">Questions</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-green-600">{test.analytics.participants}</p>
-                        <p className="text-xs text-gray-500">Participants</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-purple-600">{test.analytics.submissions}</p>
-                        <p className="text-xs text-gray-500">Submissions</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Completion Rate Bar */}
-                  <div className="mt-4">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600">Completion Rate</span>
-                      <span className="font-medium text-gray-900">{completionRate}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all"
-                        style={{ width: `${completionRate}%` }}
-                      />
-                    </div>
-                  </div>
+                  )}
                 </div>
-
-                {/* Shareable Link */}
-                <div className="px-6 py-4 bg-gray-50">
-                  <p className="text-xs text-gray-600 mb-2 font-medium">Shareable Link</p>
-                  <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2">
-                    <code className="text-sm text-blue-600 flex-1 overflow-x-auto">
-                      {shareableLink}
-                    </code>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyLink(shareableLink)}
-                      className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 transition whitespace-nowrap"
-                    >
-                      Copy
-                    </button>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="px-6 py-4 flex flex-wrap gap-3">
-                  <Link
-                    to={`/test/${test.id}`}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium"
-                  >
-                    View / Add Questions
-                  </Link>
-
-                  <Form method="post" className="inline">
-                    <input type="hidden" name="intent" value="closeTest" />
-                    <input type="hidden" name="testId" value={test.id} />
-                    <button
-                      type="submit"
-                      className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition font-medium"
-                      onClick={(e) => {
-                        if (!confirm("Are you sure you want to close this test? This action cannot be undone.")) {
-                          e.preventDefault();
-                        }
-                      }}
-                    >
-                      Close Test
-                    </button>
-                  </Form>
-                </div>
+                {t.type !== "warning" && (
+                  <button onClick={() => removeToast(t.id)} className="text-white/85 hover:text-white transition">
+                    <X size={18} />
+                  </button>
+                )}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
-      )}
-    </div>
+
+        {/* Header with logout */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Teacher Dashboard</h1>
+          <Form method="post">
+            <input type="hidden" name="intent" value="logout" />
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-[10px] transition bg-gradient-to-r from-emerald-700 to-emerald-500 text-white/85"
+            >
+              Logout
+            </button>
+          </Form>
+        </div>
+
+        {/* Overall Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Card 1 - Active Tests */}
+          <div className="bg-[#0C1219]/85 border border-emerald-400 rounded-lg p-6 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-500/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-emerald-400 font-medium">Active Tests</p>
+                <p className="text-3xl font-bold text-emerald-400 mt-1">
+                  {overallStats.totalTests}
+                </p>
+              </div>
+              <div className="p-3 rounded-full">
+                <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2 - Total Participants */}
+          <div className="bg-[#0C1219]/85 border border-emerald-400 rounded-lg p-6 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-500/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-emerald-400 font-medium">Total Participants</p>
+                <p className="text-3xl font-bold text-emerald-400 mt-1">
+                  {overallStats.totalParticipants}
+                </p>
+              </div>
+              <div className="p-3 rounded-full">
+                <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3 - Total Submissions */}
+          <div className="bg-[#0C1219]/85 border border-emerald-400 rounded-lg p-6 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-500/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-emerald-400 font-medium">Total Submissions</p>
+                <p className="text-3xl font-bold text-emerald-400 mt-1">
+                  {overallStats.totalSubmissions}
+                </p>
+              </div>
+              <div className="p-3 rounded-full">
+                <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Create new test */}
+        <div className="mb-6">
+          <button
+            onClick={handleNewTestClick}
+            className="bg-gradient-to-r text-sm items-center from-emerald-700 to-emerald-500 text-white/85 px-6 py-3 rounded-xl transition font-medium shadow-md"
+          >
+            Create New Test
+          </button>
+        </div>
+
+        {/* Active tests with analytics */}
+        <h2 className="text-2xl font-semibold mb-4">Active Tests</h2>
+        {activeTests.length === 0 ? (
+          <div className="bg-[#0C1219]/85 border border-emerald-400 rounded-lg p-8 text-center">
+            <p className="text-emerald-400">No active tests found. Create your first test to get started!</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {activeTests.map((test) => {
+              const shareableLink = `${baseUrl}/start-test/${test.id}`;
+              const completionRate = test.analytics.participants > 0
+                ? Math.round((Number(test.analytics.submissions) / Number(test.analytics.participants)) * 100)
+                : 0;
+
+              return (
+                <div
+                  key={test.id}
+                  className="relative group"
+                >
+                  <div className="bg-[#0C1219]/85 rounded-lg shadow-sm hover:shadow-md transition relative z-10">
+                    {/* Test Header */}
+                    <div className="p-6">
+                      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-xl text-emerald-400">{test.title}</h3>
+                          <p className="text-sm text-white/85 mt-1">{test.description}</p>
+                        </div>
+
+                        {/* Quick Stats */}
+                        <div className="flex gap-4 lg:gap-6 text-white/85">
+                          <div className="text-center">
+                            <p className="text-2xl font-bold">{test.analytics.questions}</p>
+                            <p className="text-xs">Questions</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-2xl font-bold">{test.analytics.participants}</p>
+                            <p className="text-xs">Participants</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-2xl font-bold">{test.analytics.submissions}</p>
+                            <p className="text-xs">Submissions</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Completion Rate Bar */}
+                      <div className="mt-4">
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="text-white/85">Completion Rate</span>
+                          <span className="font-medium text-white/85">{completionRate}%</span>
+                        </div>
+                        <div className="w-full rounded-full h-2">
+                          <div
+                            className="bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-500 h-2 rounded-full transition-all"
+                            style={{ width: `${completionRate}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Shareable Link */}
+                    <div className="px-6 py-2">
+                      <p className="text-xs text-white/85 mb-2 font-medium">Shareable Link</p>
+                      <div className="flex items-center gap-2">
+                        <div className="bg-white/2.5 px-3 py-2 rounded-lg flex w-full justify-between items-center gap-3">
+                          <code className="text-sm text-emerald-300 flex-1 overflow-x-auto">
+                            {shareableLink}
+                          </code>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyLink(shareableLink)}
+                            className="text-xs text-white/85 border border-emerald-400 px-3 py-1.5 rounded-lg transition whitespace-nowrap hover:border-emerald-300 hover:bg-emerald-700"
+                          >
+                            Copy
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="px-6 py-4 flex flex-wrap gap-3">
+                      <Link
+                        to={`/test/${test.id}`}
+                        className="bg-gradient-to-r text-sm items-center from-emerald-800 to-emerald-600 text-white px-4 py-2 rounded-lg transition font-medium"
+                      >
+                        View / Add Questions
+                      </Link>
+
+                      <Form method="post" id={`close-form-${test.id}`} className="inline">
+                        <input type="hidden" name="intent" value="closeTest" />
+                        <input type="hidden" name="testId" value={test.id} />
+                        <button
+                          type="button"
+                          onClick={() => handleCloseTestClick(test.id)}
+                          className="border border-emerald-400 text-white px-4 py-2 rounded-lg transition font-medium text-sm items-center hover:bg-emerald-700"
+                        >
+                          Close Test
+                        </button>
+                      </Form>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Animations */}
+      <style>{`
+        @keyframes slide-in {
+          from { transform: translateX(200px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        .animate-slide-in {
+          animation: slide-in .3s ease-out;
+        }
+      `}</style>
+    </section>
   );
-} 
+}

@@ -5,6 +5,7 @@ import { users, testParticipants } from "~/src/db/schema";
 import { eq, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { createUserSession } from "~/server/session.server";
+import { useState } from "react";
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
   const formData = await request.formData();
@@ -70,43 +71,86 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
 export default function StudentAuth() {
   const actionData = useActionData<typeof action>();
+  const [isFormActive, setIsFormActive] = useState(false);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">
-          Student Authentication
-        </h1>
+    <div className="w-screen h-screen relative bg-gradient-to-b from-[#142E29] to-[#031B1D]">
+      {/* Form Container */}
+      <div className="absolute inset-0 flex items-center justify-center z-10">
 
-        {actionData?.error && (
-          <p className="text-red-600 mb-4 text-center">{actionData.error}</p>
-        )}
+        {/* Gradient Background (shows on hover or focus inside form) */}
+        <img
+          src="https://qblapbmmhjyxpoeyhjrf.supabase.co/storage/v1/object/public/question-images/assets/bg-grad-get-started.png"
+          className={`
+            w-full h-full object-contain absolute inset-0
+            transition-opacity duration-500 
+            pointer-events-none
+            ${isFormActive ? 'opacity-100' : 'opacity-0'}
+          `}
+        />
+        <div 
+          className="bg-white/85 shadow-md rounded-2xl p-8 w-full max-w-md backdrop-blur-md bg-opacity-90 relative z-10"
+          onMouseEnter={() => setIsFormActive(true)}
+          onMouseLeave={() => setIsFormActive(false)}
+          // onFocus={() => setIsFormActive(true)}
+          // onBlur={(e) => {
+          //   // Only hide if focus is leaving the form container entirely
+          //   if (!e.currentTarget.contains(e.relatedTarget)) {
+          //     setIsFormActive(false);
+          //   }
+          // }}
+        >
+          <h1 className="text-2xl font-bold mb-6 text-center">
+            Student Authentication
+          </h1>
 
-        {/* ⭐ THIS IS THE FORM ⭐ */}
-        <Form method="post" className="flex flex-col gap-4">
-          <input
-            type="email"
-            name="email"
-            placeholder="Student Email"
-            required
-            className="border border-gray-300 rounded px-3 py-2"
-          />
+          {/* Error Display */}
+          {actionData?.error && (
+            <div className="mb-4 text-red-500 text-sm text-center font-medium">
+              {actionData.error}
+            </div>
+          )}
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            required
-            className="border border-gray-300 rounded px-3 py-2"
-          />
+          <Form method="post" className="flex flex-col gap-4">
+            {/* Email field */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                id="email"
+                required
+                placeholder="Enter your email"
+                className="w-full p-2 border-1 border-gray-400 rounded-lg focus:border-emerald-500 outline-none"
+              />
+            </div>
 
-          <button
-            type="submit"
-            className="bg-blue-600 text-white rounded py-2 hover:bg-blue-700 transition"
-          >
-            Continue
-          </button>
-        </Form>
+            {/* Password field */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                name="password"
+                id="password"
+                required
+                placeholder="••••••••"
+                className="w-full p-2 border-1 border-gray-400 rounded-lg focus:border-emerald-500 outline-none"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="w-full py-2 font-semibold text-white rounded-lg transition-all bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-500 hover:shadow-lg"
+            >
+              Continue
+            </button>
+          </Form>
+        </div>
       </div>
     </div>
   );

@@ -54,5 +54,13 @@ export default [
     {
         path: "/api/submit-test",
         file: "routes/api/submit-test.tsx",
+    },
+    {
+        path: "/api/process-speech-analysis",
+        file: "routes/api/process-speech-analysis.tsx",
+    },
+    {
+        path: "/api/analyse-transcript",
+        file: "routes/api/analyse-transcript.tsx",
     }
 ] satisfies RouteConfig;
